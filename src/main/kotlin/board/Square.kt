@@ -3,26 +3,32 @@ package board
 import piece.Piece
 
 /**
- * A single tile (or field)
+ * A single square on the board. Is defined
  *
  * @author Dominik Hoftych
  */
-data class Tile(val row: Int, val col: Int, var piece: Piece? = null) {
+data class Square(val position: Position, var piece: Piece? = null) {
 
-    val rank: Int = 8 - row
+    val rank: Int = 8 - position.row
 
-    val file: Char = charArrayOf('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h')[col]
+    val file: Char = charArrayOf('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h')[position.col]
 
-    val color: Char = if (1 > (row + col) % 2) 'W' else 'B'
+    val color: Char = if (1 > (position.row + position.col) % 2) 'W' else 'B'
 
-    val text: String = "${file}${rank}}"
+    val text: String = "${file}${rank}"
 
     init {
-        require(row in 0..7 && col in 0..7) {
-            "Tile out of bounds"
+        require(position.withinBoard) {
+            "Square out of bounds"
         }
     }
 
-    constructor(other: Tile) : this(other.row, other.col, other.piece)
-    constructor(other: Tile, piece: Piece) : this(other.row, other.col, piece)
+    constructor(other: Square) : this(other.position, other.piece)
+    constructor(other: Square, piece: Piece) : this(other.position, piece)
+
+    override fun toString(): String {
+        return "Square(text='$text')"
+    }
+
+
 }

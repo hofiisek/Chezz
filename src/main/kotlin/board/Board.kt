@@ -6,50 +6,52 @@ import java.lang.IllegalStateException
 
 class Board {
 
-    val tiles: List<List<Tile>>
+    val squares: List<List<Square>>
 
     constructor() {
-        this.tiles = (0..7).map { row ->
+        this.squares = (0..7).map { row ->
             (0..7).map { col ->
-                Tile(row, col).apply {
-                    piece = getPiece(this, if (row in 0..2) Player.BLACK else Player.WHITE)
+                Square(Position(row, col)).apply {
+                    piece = getPiece(this, if (row in 0..2) Player.WHITE else Player.BLACK)
                 }
             }.toList()
-
         }
     }
 
-    constructor(tiles: List<List<Tile>>) {
-        this.tiles = tiles
+    constructor(squares: List<List<Square>>) {
+        this.squares = squares
     }
 
     constructor(other: Board) {
-        this.tiles = other.tiles
+        this.squares = other.squares
     }
 
-    private fun getPiece(tile: Tile, player: Player): Piece? = when(tile.rank) {
-        2,7 -> Pawn(player, tile)
+    fun getSquare(position: Position): Square = squares[position.row][position.col]
+
+    private fun getPiece(square: Square, player: Player): Piece? = when(square.rank) {
+        2,7 -> Pawn(player, square)
         in 3..6 -> null
-        else -> when(tile.file) {
-            'a' -> Rook(player, tile)
-            'b' -> Knight(player, tile)
-            'c' -> Bishop(player, tile)
-            'd' -> King(player, tile)
-            'e' -> Queen(player, tile)
-            'f' -> Bishop(player, tile)
-            'g' -> Knight(player, tile)
-            'h' -> Rook(player, tile)
+        else -> when(square.file) {
+            'a' -> Rook(player, square)
+            'b' -> Knight(player, square)
+            'c' -> Bishop(player, square)
+            'd' -> King(player, square)
+            'e' -> Queen(player, square)
+            'f' -> Bishop(player, square)
+            'g' -> Knight(player, square)
+            'h' -> Rook(player, square)
             else -> throw IllegalStateException("Tile out of bounds")
         }
     }
 
+
     fun print() {
 //        tiles.forEach { row ->
-//            row.forEach { tile -> print(" ${tile.file}${tile.rank} ") }
+//            row.forEach { tile -> print(" ${tile.file}${tile.rank}_${tile.color}") }
 //            println()
 //        }
 
-        tiles.forEach { row ->
+        squares.forEach { row ->
             row.forEach { tile -> print(tile.piece?.unicode() ?: " ") }
             println()
         }
