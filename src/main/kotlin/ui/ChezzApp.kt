@@ -3,6 +3,7 @@ package ui
 import javafx.stage.Stage
 import tornadofx.App
 import tornadofx.launch
+import ui.view.ChezzView
 
 class ChezzApp : App(ChezzView::class) {
 
