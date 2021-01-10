@@ -1,26 +1,42 @@
 package piece
 
+import board.Board
 import board.Square
 import game.Move
+import game.MoveGenerator
 import game.Player
-
-/**
- * Movement of pieces defined as a pair of row and column shift (in this order)
- */
-typealias Shift = Pair<Int, Int>
+import game.text
 
 /**
  * Abstract parent of all chess pieces, i.e. pawn, rook, bishop, knight, queen and king.
- * Resides on a particular [Square], belongs to one of the [Player]s and its movement is defined by a set of [Shift]s.
+ * Resides on a particular [Square] and belongs to one of the [Player]s.
  */
-sealed class Piece {
+sealed class Piece(open val player: Player, open val square: Square) {
 
-    abstract val position: Square
-    abstract val player: Player
+    /**
+     * Name of the piece in the "pieceType_colorLetter" format.
+     * Is used when loading piece images so it MUST correspond.
+     */
+    abstract val name: String
+
+    /**
+     * Log of [Move]s of the piece
+     */
     val moveHistory: MutableList<Move> = mutableListOf()
-    
-    protected abstract val shifts: Set<Shift>
 
+    /**
+     * Whether the piece has already moved from its original position
+     */
+    val hasMoved: Boolean = moveHistory.isNotEmpty()
+
+    /**
+     * Returns the set of allowed moves of this piece
+     */
+    fun getAllowedMoves(board: Board): Set<Move> = MoveGenerator.generate(this, board)
+
+    /**
+     * Returns the unicode symbol of the piece
+     */
     fun unicode(): String = when(this) {
         is Pawn -> if (player == Player.WHITE) "\u2659" else "\u265F"
         is Rook -> if (player == Player.WHITE) "\u2656" else "\u265C"
@@ -31,87 +47,32 @@ sealed class Piece {
     }
 }
 
-data class Pawn(override val player: Player, override val position: Square) : Piece() {
-    
-   override val shifts = setOf(
-        Shift(+1, 0),
-        Shift(+1, -1),
-        Shift(+1, +1)
-    )
+data class Pawn(override val player: Player, override val square: Square) : Piece(player, square) {
 
+    override val name = "Pawn_${player.text()}"
 }
 
-data class Rook(override val player: Player, override val position: Square) : Piece() {
+data class Rook(override val player: Player, override val square: Square) : Piece(player, square) {
 
-    override val shifts = (1..7).map {
-        setOf(
-            Shift(-it, 0), // up
-            Shift(0, it),  // right
-            Shift(it, 0),  // down
-            Shift(0, -it)  // left
-        )
-    }.flatten().toSet()
-
+    override val name = "Rook_${player.text()}"
 }
 
-data class Knight(override val player: Player, override val position: Square) : Piece() {
+data class Knight(override val player: Player, override val square: Square) : Piece(player, square) {
 
-    override val shifts = setOf(
-            Shift(-2, 1),  // up->right
-            Shift(-1, 2),  // right->up
-            Shift(1, 2),   // right->down
-            Shift(2, 1),   // down->right
-            Shift(2, -1),  // down->left
-            Shift(1, -2),  // left->down
-            Shift(-1, -2), // left->up
-            Shift(-2, -1), // up->left
-    )
-
+    override val name = "Knight_${player.text()}"
 }
 
-data class Bishop(override val player: Player, override val position: Square) : Piece() {
+data class Bishop(override val player: Player, override val square: Square) : Piece(player, square) {
 
-    override val shifts = (1..7).map {
-        setOf(
-            Shift(-it, it), // up-right
-            Shift(it, it),  // down-right
-            Shift(it, -it),  // down-left
-            Shift(-it, -it)  // up-left
-        )
-    }.flatten().toSet()
-
+    override val name = "Bishop_${player.text()}"
 }
 
-data class Queen(override val player: Player, override val position: Square) : Piece() {
+data class Queen(override val player: Player, override val square: Square) : Piece(player, square) {
 
-    override val shifts = (1..7).map {
-        setOf(
-            // clockwise
-            Shift(-it, 0),  // up
-            Shift(-it, it),  // up-right
-            Shift(0, it), // right
-            Shift(it, it),  // down-right
-            Shift(it, 0),  // down
-            Shift(it, -it), // down-left
-            Shift(0, -it),  // left
-            Shift(-it, -it)  // up-left
-        )
-    }.flatten().toSet()
-
+    override val name = "Queen_${player.text()}"
 }
 
-data class King(override val player: Player, override val position: Square) : Piece() {
+data class King(override val player: Player, override val square: Square) : Piece(player, square) {
 
-    override val shifts = setOf(
-            // clockwise
-            Shift(-1, 0),  // up
-            Shift(-1, 1),  // up-right
-            Shift(0, 1), // right
-            Shift(1, 1),  // down-right
-            Shift(1, 0),  // down
-            Shift(1, -1), // down-left
-            Shift(0, -1),  // left
-            Shift(-1, -1)  // up-left
-    )
-
+    override val name = "King_${player.text()}"
 }
