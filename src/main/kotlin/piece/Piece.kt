@@ -1,17 +1,19 @@
 package piece
 
 import board.Board
-import board.Square
+import board.Position
 import game.Move
 import game.MoveGenerator
 import game.Player
 import game.text
+import javafx.scene.image.Image
+import javafx.scene.image.ImageView
 
 /**
  * Abstract parent of all chess pieces, i.e. pawn, rook, bishop, knight, queen and king.
- * Resides on a particular [Square] and belongs to one of the [Player]s.
+ * Resides on a particular [Position] and belongs to one of the [Player]s.
  */
-sealed class Piece(open val player: Player, open val square: Square) {
+sealed class Piece(open val player: Player, open var position: Position) {
 
     /**
      * Name of the piece in the "pieceType_colorLetter" format.
@@ -30,7 +32,13 @@ sealed class Piece(open val player: Player, open val square: Square) {
     val hasMoved: Boolean = moveHistory.isNotEmpty()
 
     /**
-     * Returns the set of allowed moves of this piece
+     * [ImageView] with the image of the piece
+     */
+    val img: ImageView
+        get() = ImageView(Image("/pieces/${name}.png", 40.0, 40.0, true, true))
+
+    /**
+     * Returns the set of allowed moves of this piece w.r.t. current game state
      */
     fun getAllowedMoves(board: Board): Set<Move> = MoveGenerator.generate(this, board)
 
@@ -47,32 +55,34 @@ sealed class Piece(open val player: Player, open val square: Square) {
     }
 }
 
-data class Pawn(override val player: Player, override val square: Square) : Piece(player, square) {
+/**
+ * Extension to allow calling [Piece.getAllowedMoves] when we are sure that the piece is non-null,
+ * without the need of null-safe checks.
+ */
+fun Piece?.getAllowedMoves(board: Board): Set<Move> {
+    return if (this == null) emptySet() else MoveGenerator.generate(this, board)
+}
 
+data class Pawn(override val player: Player, override var position: Position) : Piece(player, position) {
     override val name = "Pawn_${player.text()}"
 }
 
-data class Rook(override val player: Player, override val square: Square) : Piece(player, square) {
-
+data class Rook(override val player: Player, override var position: Position) : Piece(player, position) {
     override val name = "Rook_${player.text()}"
 }
 
-data class Knight(override val player: Player, override val square: Square) : Piece(player, square) {
-
+data class Knight(override val player: Player, override var position: Position) : Piece(player, position) {
     override val name = "Knight_${player.text()}"
 }
 
-data class Bishop(override val player: Player, override val square: Square) : Piece(player, square) {
-
+data class Bishop(override val player: Player, override var position: Position) : Piece(player, position) {
     override val name = "Bishop_${player.text()}"
 }
 
-data class Queen(override val player: Player, override val square: Square) : Piece(player, square) {
-
+data class Queen(override val player: Player, override var position: Position) : Piece(player, position) {
     override val name = "Queen_${player.text()}"
 }
 
-data class King(override val player: Player, override val square: Square) : Piece(player, square) {
-
+data class King(override val player: Player, override var position: Position) : Piece(player, position) {
     override val name = "King_${player.text()}"
 }

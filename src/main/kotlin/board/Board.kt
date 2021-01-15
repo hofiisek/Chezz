@@ -7,11 +7,15 @@ import java.lang.IllegalStateException
 
 /**
  * Chess board with a 8x8 array of [Square]s holding the current game state.
+ *
+ * @param squares
+ *
+ * @author Dominik Hoftych
  */
 class Board(val squares: List<List<Square>>) {
 
     /**
-     * Default constructor called only once at the beginning of a new game
+     * Default constructor to be called when initializing an empty board
      */
     constructor() : this(
         List(8) { row ->
@@ -53,10 +57,17 @@ class Board(val squares: List<List<Square>>) {
     }
 
     /**
-     * Returns the [Square] based on given [Position], or null if the given [Position] is not on the board
+     * Returns the [Square] based on given [Position], or throw exception if given position is not on the board
      */
     fun getSquare(position: Position): Square {
         return if (position.onBoard) squares[position.row][position.col] else throw IllegalStateException("Position not on board")
+    }
+
+    /**
+     * Returns the [Square] based on given [Position], or null if the given position is not on the board
+     */
+    fun getSquareOrNull(position: Position): Square? {
+        return if (position.onBoard) squares[position.row][position.col] else null
     }
 
     /**

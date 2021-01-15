@@ -15,7 +15,7 @@ object MoveGenerator {
 
     // extension functions on Pair
     private fun Pair<Int, Int>.asPosition() = Position(this.first, this.second)
-    private infix fun Pair<Int, Int>.times(n: Int) = Pair(n * this.first, n * this.first)
+    private infix fun Pair<Int, Int>.times(n: Int) = Pair(n * this.first, n * this.second)
 
     // extension functions on Square
     private infix fun Square.isOwnedBy(player: Player): Boolean = this.piece?.player == player
@@ -45,7 +45,7 @@ object MoveGenerator {
     private fun pawnMoves(thisPawn: Piece, board: Board): Set<Move> {
         // direction of movement along the y axis
         val forward = if (thisPawn.player == Player.WHITE) 1 else -1
-        val currPos: Position = thisPawn.square.position
+        val currPos: Position = thisPawn.position
 
         val movement = mutableListOf(
                 // basic move forward by 1 square
@@ -59,14 +59,14 @@ object MoveGenerator {
         // capture moves
         for (j in arrayOf(-1, 1)) {
             val newPos: Position = currPos add Pair(forward, j)
-            val newSquare: Square? = board.getSquareSafe(newPos) ?: continue
-            if (newSquare!! isOwnedBy thisPawn.theOtherPlayer())
+            val newSquare: Square = board.getSquareOrNull(newPos) ?: continue
+            if (newSquare isOwnedBy thisPawn.theOtherPlayer())
                 Pair(forward, j)
         }
 
         return movement
                 .map { shift -> currPos add shift }
-                .map { pos -> board.getSquareSafe(pos) }
+                .map { pos -> board.getSquare(pos) }
                 .filterNotNull()
                 .map { square -> Move(thisPawn, square) }
                 .toSet()
@@ -81,12 +81,12 @@ object MoveGenerator {
         )
 
         val moves: MutableList<Move> = mutableListOf()
-        val currPos = thisRook.square.position
+        val currPos = thisRook.position
         
         for (shift in movement) {
             for (n in 1..7) {
                 val newPos = currPos add (shift times n)
-                val newSquare = board.getSquareSafe(newPos) ?: continue
+                val newSquare = board.getSquareOrNull(newPos) ?: break
 
                 when {
                     newSquare isOwnedBy thisRook.player -> break
@@ -115,11 +115,11 @@ object MoveGenerator {
         )
 
         val moves: MutableList<Move> = mutableListOf()
-        val currPos = thisKnight.square.position
+        val currPos = thisKnight.position
 
         for (shift in movement) {
             val newPos = currPos add shift
-            val newSquare = board.getSquareSafe(newPos) ?: continue
+            val newSquare = board.getSquareOrNull(newPos) ?: break
 
             when {
                 newSquare isOwnedBy thisKnight.player -> continue

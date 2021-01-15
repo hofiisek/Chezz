@@ -4,7 +4,7 @@ import board.Square
 import piece.Piece
 
 /**
- * Representing a single move of some piece.
+ * Representing a single move with a piece.
  *
  * @author Dominik Hoftych
  */

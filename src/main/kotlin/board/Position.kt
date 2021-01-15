@@ -1,11 +1,15 @@
 package board
 
+import javafx.scene.paint.Color
+
 
 /**
- * Specific position on the board.
+ * Specific position on the chess board.
  *
- * @param row row index, in range from 0 to 7
- * @param col column index, in range from 0 to 7
+ * @param row row index in range from 0 to 7
+ * @param col column index in range from 0 to 7
+ *
+ * @author Dominik Hoftych
  */
 data class Position(val row: Int, val col: Int) {
 
@@ -16,5 +20,5 @@ data class Position(val row: Int, val col: Int) {
 }
 
 infix fun Position.add(other: Position) = Position(this.row + other.row, this.col + other.col)
+infix fun Position.add(other: Pair<Int, Int>) = this add Position(other.first, other.second)
 infix fun Position.add(square: Square) = this add square.position
-infix fun Position.add(pair: Pair<Int, Int>) = this add Position(pair.first, pair.second)
