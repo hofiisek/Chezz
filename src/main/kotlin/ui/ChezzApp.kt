@@ -3,9 +3,9 @@ package ui
 import javafx.stage.Stage
 import tornadofx.App
 import tornadofx.launch
-import ui.view.ChezzView
+import ui.view.ChezzAppView
 
-class ChezzApp : App(ChezzView::class) {
+class ChezzApp : App(ChezzAppView::class) {
 
     override fun start(stage: Stage) {
         super.start(stage)
@@ -16,7 +16,9 @@ class ChezzApp : App(ChezzView::class) {
 
 }
 
-
+/**
+ * Main entry point to the application.
+ */
 fun main(args: Array<String>) {
     launch<ChezzApp>(args)
 }
