@@ -1,8 +1,6 @@
 package ui.view
 
-import board.Board
-import board.Position
-import board.Square
+import board.*
 import game.Move
 import javafx.geometry.HPos
 import javafx.scene.control.Label
@@ -26,25 +24,21 @@ class BoardView : View() {
     /**
      * Matrix of [Rectangle]s that represent individual squares of the board.
      */
-    private val boardSquares: List<List<Rectangle>> = List(8) {
-        List(8) {
-            Rectangle(0.0, 0.0, 80.0, 80.0).apply { arcWidth = 3.0; arcHeight = 3.0 }
-        }
+    private val boardSquares: Matrix<Rectangle> = Matrix(8, 8) { _, _ ->
+        Rectangle(0.0, 0.0, 80.0, 80.0).apply { arcWidth = 3.0; arcHeight = 3.0 }
     }
 
     /**
      * Matrix of [Label]s that contain the piece images.
      */
-    private val boardPieces: List<List<Label>> = List(8) {
-        List(8) {
-            Label().apply {
-                GridPane.setHalignment(this, HPos.CENTER)
-            }
+    private val boardPieces: Matrix<Label> = Matrix(8, 8) { _, _ ->
+        Label().apply {
+            GridPane.setHalignment(this, HPos.CENTER)
         }
     }
 
     override val root = gridpane {
-        for (row in controller.getSquares()) {
+        controller.getSquares().forEachRow { row ->
             row {
                 row.map { initSquareUI(this, it) }
             }
@@ -60,9 +54,8 @@ class BoardView : View() {
     private fun initSquareUI(pane: Pane, square: Square) : Pane {
         // could not center the piece image other than using another nested gridpane :(
         return pane.gridpane {
-            val (row, col) = square.position
-            add(boardSquares[row][col])
-            add(boardPieces[row][col])
+            add(boardSquares[square.position])
+            add(boardPieces[square.position])
 
             onLeftClick {
                 controller.onSquareClicked(square)
@@ -79,22 +72,11 @@ class BoardView : View() {
 
     /**
      * Renders all moves that are allowed for the currently selected piece.
-     * If there are no such moves, repaint the board squares to default colors
      */
     fun renderAllowedMoves(moves: Set<Move>) {
-        if (moves.isNotEmpty()) {
-            moves.map { it.to.position }.forEach { (row, col) ->
-                boardSquares[row][col].fill = Color.FORESTGREEN
-            }
-        } else {
-            repaintBoard()
+        moves.forEach {
+            boardSquares[it.to.position].fill = Color.FORESTGREEN
         }
-
-        // :((
-//        moves.takeIf { it.isNotEmpty() }
-//                ?.map { it.to.position }
-//                ?.forEach { (row, col) -> boardSquares[row][col].fill = Color.FORESTGREEN }
-//                ?: repaintBoard()
     }
 
     /**
@@ -102,7 +84,7 @@ class BoardView : View() {
      */
     fun redrawBoard(board: Board) {
         repaintBoard()
-        board.squares.flatten().forEach { square ->
+        board.squares.forEach { square ->
             redrawPiece(square)
         }
     }
@@ -111,10 +93,8 @@ class BoardView : View() {
      * Paints the board squares to default colors
      */
     fun repaintBoard() {
-        for ((row, rowSquares) in boardSquares.withIndex()) {
-            for ((col, square) in rowSquares.withIndex()) {
-                square.fill = getSquareColor(row, col)
-            }
+        boardSquares.forEachIndexed { row, col, square ->
+            square.fill = getSquareColor(row, col)
         }
     }
 
@@ -123,7 +103,8 @@ class BoardView : View() {
      * the piece image from given square.
      */
     private fun redrawPiece(square: Square) {
-        boardPieces[square.position.row][square.position.col].graphic = square.piece?.img
+        boardPieces[square.position].graphic = square.piece?.img
+//        boardPieces[square.position.row][square.position.col].graphic = square.piece?.img
     }
 
 

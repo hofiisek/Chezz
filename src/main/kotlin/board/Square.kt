@@ -51,10 +51,10 @@ data class Square(val position: Position, var piece: Piece? = null) {
     constructor(other: Square, piece: Piece) : this(other.position, piece)
 
     override fun toString(): String {
-        return "Square(position='$text', piece='${piece?.name ?: "None"})"
+        return "Square(position='$position', text=$text, piece='${piece?.name ?: "None"})"
     }
 
 }
 
-infix fun Square.occupiedBySameColorAs(piece: Piece): Boolean = this.piece?.player == piece.player
-infix fun Square.occupiedBySameColorAs(player: Player): Boolean = this.piece?.player == player
+infix fun Square.belongsToSamePlayerAs(piece: Piece): Boolean = this.piece?.player == piece.player
+infix fun Square.isOwnedBy(player: Player): Boolean = this.piece?.player == player

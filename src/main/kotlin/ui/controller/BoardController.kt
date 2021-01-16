@@ -1,8 +1,9 @@
 package ui.controller
 
 import board.Board
+import board.Matrix
 import board.Square
-import board.occupiedBySameColorAs
+import board.belongsToSamePlayerAs
 import game.GameController
 import game.Move
 import piece.Piece
@@ -30,6 +31,8 @@ class BoardController : Controller() {
      * is performed.
      */
     fun onSquareClicked(clickedSquare: Square) {
+        println("Clicked on square $clickedSquare")
+
         if (selectedPiece == null) {
             if (clickedSquare.piece != null) selectPiece(clickedSquare.piece!!)
         } else {
@@ -63,7 +66,7 @@ class BoardController : Controller() {
      * Either move with the selected piece, or select different piece.
      */
     private fun moveOrReselect(clickedSquare: Square) {
-        if (clickedSquare occupiedBySameColorAs selectedPiece!!) {
+        if (clickedSquare belongsToSamePlayerAs selectedPiece!!) {
             selectPiece(clickedSquare.piece!!)
         } else {
             val newBoardState: Board = GameController.processMove(Move(selectedPiece!!, clickedSquare))
@@ -72,7 +75,7 @@ class BoardController : Controller() {
         }
     }
 
-    fun getSquares(): List<List<Square>> = GameController.board.squares
+    fun getSquares(): Matrix<Square> = GameController.board.squares
 
     fun getBoard(): Board = GameController.board
 
