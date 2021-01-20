@@ -3,9 +3,9 @@ package game
 import board.Board
 import board.Square
 import board.add
+import board.occupiedBy
 import piece.*
-
-private typealias Direction = Pair<Int, Int>
+import kotlin.math.abs
 
 /**
  * General moves generator.
@@ -24,12 +24,12 @@ object MoveGenerator {
      * For given [piece], generates all allowed moves considering the current [board] state.
      */
     fun generate(piece: Piece, board: Board): Set<Move> = when(piece) {
-        is Pawn -> pawnMoves(piece, board)
+        is Pawn -> pawnMoves(piece, board) and enPassant(piece, board)
         is Rook -> rookMoves(piece, board)
         is Knight -> knightMoves(piece, board)
         is Bishop -> bishopMoves(piece, board)
         is Queen -> queenMoves(piece, board)
-        is King -> kingMoves(piece, board)
+        is King -> kingMoves(piece, board) and castling(piece, board)
     }
 
     private fun pawnMoves(thisPawn: Piece, board: Board): Set<Move> {
@@ -52,20 +52,37 @@ object MoveGenerator {
             val newPos = currPos add Direction(shiftX, shiftY)
             val newSquare = board.getSquareOrNull(newPos) ?: continue
 
-            if (newSquare belongsTo thisPawn.theOtherPlayer()) {
+            if (newSquare occupiedBy thisPawn.theOtherPlayer) {
                 movement.add(Direction(shiftX, shiftY))
             }
         }
-
-        // en passant
-        // TODO
-
 
         return movement
                 .map { shift -> currPos add shift }
                 .map { pos -> board.getSquare(pos) }
                 .map { square -> Move(thisPawn, square) }
                 .toSet()
+    }
+
+    private fun enPassant(thisPawn: Piece, board: Board): Set<Move> {
+        val enemyPawns: List<Piece> = board.getPiecesFor(thisPawn.theOtherPlayer, Pawn::class)
+
+        val moves: MutableSet<Move> = mutableSetOf()
+
+        for (enemyPawn in enemyPawns.map { it as Pawn }) {
+            val (advancedTwoSquares, skippedSquare) = enemyPawn.advancedTwoSquares
+            if (!advancedTwoSquares) continue
+
+            val (thisRow, thisCol) = thisPawn.position
+            val (enemyRow, enemyCol) = enemyPawn.position
+            if (thisRow != enemyRow) continue
+            if (abs(thisCol - enemyCol) != 1) continue
+
+            // TODO check that this is done the very next move after enemy pawn's two-step advance
+            moves.add(Move(thisPawn, board.getSquare(skippedSquare), enemyPawn))
+        }
+
+        return moves
     }
 
     private fun rookMoves(thisRook: Piece, board: Board): Set<Move> {
@@ -108,13 +125,13 @@ object MoveGenerator {
     private fun queenMoves(thisQueen: Piece, board: Board): Set<Move> {
         val movement = setOf(
                 Direction(-1, 0),  // up
-                Direction(-1,  1),  // up-right
-                Direction(0,  1), // right
-                Direction(1,  1),  // down-right
+                Direction(-1, 1),  // up-right
+                Direction(0, 1), // right
+                Direction(1, 1),  // down-right
                 Direction(1, 0),  // down
-                Direction(1, - 1), // down-left
-                Direction(0, - 1),  // left
-                Direction(-1, - 1)  // up-left
+                Direction(1, -1), // down-left
+                Direction(0, -1),  // left
+                Direction(-1, -1)  // up-left
         )
 
         return movement.flatMap { generateMoves(board, thisQueen, it, 7) }.toSet()
@@ -123,24 +140,28 @@ object MoveGenerator {
     private fun kingMoves(thisKing: Piece, board: Board): Set<Move> {
         val movement = setOf(
                 Direction(-1, 0),  // up
-                Direction(-1,  1),  // up-right
-                Direction(0,  1), // right
-                Direction(1,  1),  // down-right
+                Direction(-1, 1),  // up-right
+                Direction(0, 1), // right
+                Direction(1, 1),  // down-right
                 Direction(1, 0),  // down
-                Direction(1, - 1), // down-left
-                Direction(0, - 1),  // left
-                Direction(-1, - 1)  // up-left
+                Direction(1, -1), // down-left
+                Direction(0, -1),  // left
+                Direction(-1, -1)  // up-left
         )
 
         return movement.flatMap { generateMoves(board, thisKing, it, 1) }.toSet()
     }
 
+    private fun castling(thisKing: Piece, board: Board): Set<Move> {
+        return emptySet()
+    }
+
     /**
      * Recursively generates moves for given [Piece] along given [Direction],
-     * until either
-     *      an own piece is hit, or
-     *      an opposite piece is hit, in such case the move is still included, or
-     *      the [maxDistance] is met.
+     * until either:
+     * a) an own piece is hit, or
+     * b) an enemy piece is hit, in such case the move is still included, or
+     * c) the [maxDistance] is met.
      */
     private fun generateMoves(board: Board, piece: Piece, direction: Direction, maxDistance: Int): Set<Move> {
         fun generateMovesRecursive(dir: Direction, n: Int, moves: Set<Move> = emptySet()): Set<Move> {
@@ -150,10 +171,8 @@ object MoveGenerator {
             val newSquare = board.getSquareOrNull(newPos) ?: return moves
 
             return when {
-                newSquare belongsTo piece.player -> moves
-                newSquare belongsTo piece.theOtherPlayer() -> {
-                    moves.plus(Move(piece, newSquare))
-                }
+                newSquare occupiedBy piece.player -> moves
+                newSquare occupiedBy piece.theOtherPlayer -> moves.plus(Move(piece, newSquare))
                 else -> generateMovesRecursive(dir, n+1, moves.plus(Move(piece, newSquare)))
             }
         }
@@ -167,15 +186,10 @@ object MoveGenerator {
     private infix fun Direction.times(n: Int) = Direction(n * this.first, n * this.second)
 
     /**
-     * Returns true if the receiver [Square] belongs to given [Player]
+     * Infixed and renamed [Set.plus] method
      */
-    private infix fun Square.belongsTo(player: Player): Boolean = this.piece?.player == player
-
-    /**
-     * Returns the other [Player] of the receiver [Piece]
-     */
-    private fun Piece.theOtherPlayer(): Player = if (this.player == Player.WHITE) Player.BLACK else Player.WHITE
-
-
+    private infix fun Set<Move>.and(other: Set<Move>) = this.plus(other)
 
 }
+
+private typealias Direction = Pair<Int, Int>

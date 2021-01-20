@@ -1,10 +1,7 @@
 package game
 
 import board.Board
-import board.printUnicode
 import piece.moveTo
-import tornadofx.find
-import ui.controller.BoardController
 
 
 /**
@@ -12,16 +9,18 @@ import ui.controller.BoardController
  */
 object GameController {
 
-    val board: Board = Board().also { it.printUnicode() }
-
-    val boardController: BoardController = find(BoardController::class)
+    val board: Board = Board()
 
     fun processMove(move: Move): Board {
-        val (movingPiece, squareTo) = move
-        val squareFrom = board.getSquare(movingPiece.position)
+        val (movingPiece, squareTo, capturedPiece) = move
 
+        val squareFrom = board.getSquareFor(movingPiece)
         squareFrom.piece = null
         squareTo.piece = movingPiece moveTo squareTo
+
+        if (move.isEnPassantMove) {
+            board.removePiece(capturedPiece!!.position)
+        }
 
         return board
     }
