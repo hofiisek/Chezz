@@ -3,20 +3,21 @@ package piece
 import board.Board
 import board.Position
 import board.Square
+import board.add
 import game.Move
 import game.MoveGenerator
 import game.Player
-import game.text
+import game.color
 import javafx.scene.image.Image
 import javafx.scene.image.ImageView
-import sun.security.ec.point.ProjectivePoint
+import java.lang.IllegalArgumentException
 
 /**
  * Abstract parent of all chess pieces, i.e. pawn, rook, bishop, knight, queen and king.
  *
  * @param player [Player] who owns this piece
  * @param position [Position] of this piece
- * @param moveHistory list of all previous [Position]s of this piece.
+ * @param moveHistory list of all previous [Position]s of this piece
  * 
  * @author Dominik Hoftych
  */
@@ -52,31 +53,10 @@ sealed class Piece(
 }
 
 /**
- * Moves with the piece to given [Square].
- * A new instance of [Piece] is initialized on its new position and this move
- * is recorded in piece's history list.
+ * Returns the other [Player] of the receiver [Piece]
  */
-infix fun Piece.moveTo(square: Square): Piece = when(this) {
-    is Pawn -> Pawn(this.player, square.position, this.moveHistory + square.position)
-    is Rook -> Rook(this.player, square.position, this.moveHistory + square.position)
-    is Knight -> Knight(this.player, square.position, this.moveHistory + square.position)
-    is Bishop -> Bishop(this.player, square.position, this.moveHistory + square.position)
-    is Queen -> Queen(this.player, square.position, this.moveHistory + square.position)
-    is King -> King(this.player, square.position, this.moveHistory + square.position)
-}
-
-operator fun <T> MutableList<T>.plus(element: T): MutableList<T> {
-    this.add(element)
-    return this
-}
-
-/**
- * Extension function to allow calling [Piece.getAllowedMoves] when we are sure that the piece is non-null,
- * without the need of null-safe checks.
- */
-fun Piece?.getAllowedMoves(board: Board): Set<Move> {
-    return this?.getAllowedMoves(board) ?: emptySet()
-}
+val Piece.theOtherPlayer: Player
+    get() = if (this.player == Player.WHITE) Player.BLACK else Player.WHITE
 
 /**
  * Unicode symbol of the piece or empty string if the receiver is null
@@ -89,15 +69,57 @@ val Piece?.unicode: String
         is Bishop -> if (player == Player.WHITE) "\u2657" else "\u265D"
         is Queen -> if (player == Player.WHITE) "\u2655" else "\u265B"
         is King -> if (player == Player.WHITE) "\u2654" else "\u265A"
-        else -> ""
+        else -> throw IllegalArgumentException("Receiver piece is null")
     }
+
+/**
+ * Moves with the piece to given [Square].
+ * A new instance of [Piece] is initialized on its new position and this move
+ * is recorded in piece's history list.
+ */
+infix fun Piece.moveTo(square: Square): Piece = when(this) {
+    is Pawn -> Pawn(this.player, square.position, this.moveHistory plus square.position)
+    is Rook -> Rook(this.player, square.position, this.moveHistory plus square.position)
+    is Knight -> Knight(this.player, square.position, this.moveHistory plus square.position)
+    is Bishop -> Bishop(this.player, square.position, this.moveHistory plus square.position)
+    is Queen -> Queen(this.player, square.position, this.moveHistory plus square.position)
+    is King -> King(this.player, square.position, this.moveHistory plus square.position)
+}
+
+/**
+ * Infixed convenience method for [List.plus] that can be applied on [MutableList]
+ */
+infix fun <T> MutableList<T>.plus(element: T): MutableList<T> {
+    this.add(element)
+    return this
+}
+
 
 data class Pawn(
         override val player: Player,
         override var position: Position,
         override val moveHistory: MutableList<Position> = mutableListOf()
 ) : Piece(player, position, moveHistory) {
-    override val name = "Pawn_${player.text()}"
+
+    override val name = "Pawn_${player.color()}"
+
+    /**
+     * Helper property when evaluating the possibility of en passant moves.
+     *
+     * The first value is true if and only if the pawn advanced two squares as his last move.
+     * In such case, the second value is the position of the square that was skipped
+     * during the two-square move, otherwise it's just a placeholder.
+     */
+    val advancedTwoSquares: Pair<Boolean, Position>
+        get() = when {
+            moveHistory.size != 1 -> false to position
+            player == Player.BLACK && position.row != 3 -> false to position
+            player == Player.WHITE && position.row != 4 -> false to position
+            else -> {
+                val shiftX = if (player == Player.WHITE) 1 else -1
+                true to (position add Position(shiftX, 0))
+            }
+        }
 }
 
 data class Rook(
@@ -105,7 +127,7 @@ data class Rook(
         override var position: Position,
         override val moveHistory: MutableList<Position> = mutableListOf()
 ) : Piece(player, position, moveHistory) {
-    override val name = "Rook_${player.text()}"
+    override val name = "Rook_${player.color()}"
 }
 
 data class Knight(
@@ -113,7 +135,7 @@ data class Knight(
         override var position: Position,
         override val moveHistory: MutableList<Position> = mutableListOf()
 ) : Piece(player, position, moveHistory) {
-    override val name = "Knight_${player.text()}"
+    override val name = "Knight_${player.color()}"
 }
 
 data class Bishop(
@@ -121,7 +143,7 @@ data class Bishop(
         override var position: Position,
         override val moveHistory: MutableList<Position> = mutableListOf()
 ) : Piece(player, position, moveHistory) {
-    override val name = "Bishop_${player.text()}"
+    override val name = "Bishop_${player.color()}"
 }
 
 data class Queen(
@@ -129,7 +151,7 @@ data class Queen(
         override var position: Position,
         override val moveHistory: MutableList<Position> = mutableListOf()
 ) : Piece(player, position, moveHistory) {
-    override val name = "Queen_${player.text()}"
+    override val name = "Queen_${player.color()}"
 }
 
 data class King(
@@ -137,5 +159,5 @@ data class King(
         override var position: Position,
         override val moveHistory: MutableList<Position> = mutableListOf()
 ) : Piece(player, position, moveHistory) {
-    override val name = "King_${player.text()}"
+    override val name = "King_${player.color()}"
 }

@@ -1,7 +1,6 @@
 package ui.view
 
 import board.*
-import game.Move
 import javafx.geometry.HPos
 import javafx.scene.control.Label
 import javafx.scene.layout.GridPane
@@ -37,6 +36,10 @@ class BoardView : View() {
         }
     }
 
+    /**
+     * Root gridpane that consists of a 8x8 matrix of child panes, each of those representing
+     * a single square on the chess board and listening for mouse left-clicks
+     */
     override val root = gridpane {
         controller.getSquares().forEachRow { row ->
             row {
@@ -51,6 +54,10 @@ class BoardView : View() {
         }
     }
 
+    /**
+     * Initialize UI of given [square], i.e. add [Rectangle] and [Label] that represent
+     * the given [square] to the parent pane and register mouse left-click listener
+     */
     private fun initSquareUI(pane: Pane, square: Square) : Pane {
         // could not center the piece image other than using another nested gridpane :(
         return pane.gridpane {
@@ -67,20 +74,25 @@ class BoardView : View() {
      * Renders the currently selected piece
      */
     fun renderSelectedPiece(selectedPiece: Piece) {
-        boardSquares[selectedPiece.position.row][selectedPiece.position.col].fill = Color.OLIVE
+        boardSquares[selectedPiece.position].fill = Color.OLIVE
     }
 
     /**
-     * Renders all moves that are allowed for the currently selected piece.
+     * Renders all allowed moves for the currently selected piece,
+     * i.e. appropriately colors squares to which the piece can be moved.
+     *
+     * @param movePositions set of positions to which it's legal to move the piece
      */
-    fun renderAllowedMoves(moves: Set<Move>) {
-        moves.forEach {
-            boardSquares[it.to.position].fill = Color.FORESTGREEN
+    fun renderAllowedMoves(movePositions: Set<Position>) {
+        movePositions.forEach {
+            boardSquares[it].fill = Color.FORESTGREEN
         }
     }
 
     /**
      * Redraw the whole board, i.e. repaint squares and also render pieces.
+     *
+     * @param board current board state
      */
     fun redrawBoard(board: Board) {
         repaintBoard()
@@ -104,12 +116,10 @@ class BoardView : View() {
      */
     private fun redrawPiece(square: Square) {
         boardPieces[square.position].graphic = square.piece?.img
-//        boardPieces[square.position.row][square.position.col].graphic = square.piece?.img
     }
 
 
-    private fun getSquareColor(row: Int, col: Int): Color = getSquareColor(Position(row, col))
+    private fun getSquareColor(row: Int, col: Int): Color = if((row * 7 + col) % 2 < 1) Color.SANDYBROWN else Color.SADDLEBROWN
 
-    private fun getSquareColor(position: Position): Color = if((position.row * 7 + position.col) % 2 < 1) Color.SANDYBROWN else Color.SADDLEBROWN
 
 }

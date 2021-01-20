@@ -1,7 +1,7 @@
 package board
 
 /**
- * Wrapper to simplify declaration of a matrix as a list of lists.
+ * Wrapper to simplify initialization of a matrix as a list of lists.
  *
  * @param rows number of rows
  * @param cols number of cols

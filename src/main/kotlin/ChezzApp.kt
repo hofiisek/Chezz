@@ -1,5 +1,3 @@
-package ui
-
 import javafx.stage.Stage
 import tornadofx.App
 import tornadofx.launch

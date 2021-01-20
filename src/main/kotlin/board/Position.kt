@@ -1,8 +1,5 @@
 package board
 
-import javafx.scene.paint.Color
-
-
 /**
  * Specific position on the chess board.
  *

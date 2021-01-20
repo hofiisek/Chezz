@@ -29,10 +29,6 @@ data class Square(val position: Position, var piece: Piece? = null) {
      */
     val text: String = "${file}${rank}"
 
-    /**
-     * Color of the square
-     */
-    val color: Color = if((position.row * 7 + position.col) % 2 < 1) Color.SANDYBROWN else Color.SADDLEBROWN
 
     /**
      * Whether the square is occupied by some piece
@@ -56,5 +52,12 @@ data class Square(val position: Position, var piece: Piece? = null) {
 
 }
 
-infix fun Square.belongsToSamePlayerAs(piece: Piece): Boolean = this.piece?.player == piece.player
-infix fun Square.isOwnedBy(player: Player): Boolean = this.piece?.player == player
+/**
+ * Returns true if the receiver [Square] is occupied by player of the same color as given [piece]
+ */
+infix fun Square.occupiedBySamePlayerAs(piece: Piece): Boolean = this.piece?.player == piece.player
+
+/**
+ * Returns true if the receiver [Square] is occupied by the given [player]
+ */
+infix fun Square.occupiedBy(player: Player): Boolean = this.piece?.player == player
