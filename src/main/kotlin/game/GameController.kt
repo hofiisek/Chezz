@@ -1,6 +1,7 @@
 package game
 
 import board.Board
+import board.Square
 import piece.moveTo
 
 
@@ -9,22 +10,25 @@ import piece.moveTo
  */
 object GameController {
 
-    val board: Board = Board()
+    var currentBoard: Board = Board()
 
     fun processMove(move: Move): Board {
         val (movingPiece, squareTo, capturedPiece) = move
+        val squareFrom = currentBoard.getSquareFor(movingPiece)
 
-        val squareFrom = board.getSquareFor(movingPiece)
-        squareFrom.piece = null
-        squareTo.piece = movingPiece moveTo squareTo
+        val updatedSquares: List<Square> = listOfNotNull(
+                Square(squareFrom, null),
+                Square(squareTo, movingPiece moveTo squareTo),
+                move.isEnPassantMove.ifTrueOrNull {
+                    Square(currentBoard.getSquareFor(capturedPiece!!), null)
+                }
+        )
 
-        if (move.isEnPassantMove) {
-            board.removePiece(capturedPiece!!.position)
-        }
-
-        return board
+        return Board(currentBoard, updatedSquares).also { currentBoard = it }
     }
-
-
-
 }
+
+/**
+ * Performs given [action] if the receiver boolean is true, otherwise returns null
+ */
+private fun <T> Boolean.ifTrueOrNull(action: () -> T): T? = if (this) action() else null

@@ -2,45 +2,65 @@ package board
 
 import game.Player
 import piece.*
-import tornadofx.find
-import tornadofx.getProperty
 import java.lang.IllegalArgumentException
 import java.lang.IllegalStateException
 import kotlin.reflect.KClass
-import kotlin.reflect.cast
 
 /**
  * Chess board with a 8x8 array of [Square]s holding the current game state.
  *
- * @param squares 8x8 [Matrix] of [Square]s
- *
  * @author Dominik Hoftych
  */
-class Board(val squares: Matrix<Square> = Matrix(8, 8) { row, col -> Square(row, col) }) {
+//TODO enable to index board using [position], i.e. board[position]
+class Board {
 
     /**
-     * Set pieces on the board
+     * A 8x8 matrix of squares
      */
-    init {
-        squares[0].forEach { it.piece = resolvePiece(it, Player.BLACK) }
-        squares[1].forEach { it.piece = Pawn(Player.BLACK, it.position) }
-        squares[6].forEach { it.piece = Pawn(Player.WHITE, it.position) }
-        squares[7].forEach { it.piece = resolvePiece(it, Player.WHITE) }
+    val squares: Matrix<Square>
+
+    /**
+     * Default constructor which initializes an initial board
+     */
+    constructor() {
+        this.squares = Matrix(8, 8) { row, col ->
+            val position = Position(row, col)
+            val piece = when(row) {
+                0 -> resolvePiece(Player.BLACK, position)
+                1 -> Pawn(Player.BLACK, position)
+                6 -> Pawn(Player.WHITE, position)
+                7 -> resolvePiece(Player.WHITE, position)
+                else -> null
+            }
+            Square(position, piece)
+        }
     }
 
     /**
-     * Returns the correct piece to be set on given [Square], or null if the [Square] should be empty
+     * Initializes a new board with the same squares as the [other] board except for the squares
+     * passed in the [squaresToUpdate] parameter.
      */
-    private fun resolvePiece(square: Square, player: Player): Piece = when(square.file) {
-        'a' -> Rook(player, square.position)
-        'b' -> Knight(player, square.position)
-        'c' -> Bishop(player, square.position)
-        'd' -> Queen(player, square.position)
-        'e' -> King(player, square.position)
-        'f' -> Bishop(player, square.position)
-        'g' -> Knight(player, square.position)
-        'h' -> Rook(player, square.position)
-        else -> throw IllegalStateException("Tile out of bounds")
+    constructor(other: Board, squaresToUpdate: List<Square>) {
+        val squaresToUpdateByPosition: Map<Position, Square> = squaresToUpdate.associateBy { it.position }
+        this.squares = Matrix(8, 8) { row, col ->
+            val position = Position(row, col)
+            squaresToUpdateByPosition.getOrDefault(position, other.getSquare(position))
+        }
+    }
+
+    /**
+     * Based on the column of given [position] and given [player], initializes and returns correct piece
+     */
+    private fun resolvePiece(player: Player, position: Position): Piece = when(position.col) {
+        0 -> Rook(player, position)
+        1 -> Knight(player, position)
+        2 -> Bishop(player, position)
+        3 -> Queen(player, position)
+        4 -> King(player, position)
+        5 -> Bishop(player, position)
+        6 -> Knight(player, position)
+        7 -> Rook(player, position)
+        else -> throw IllegalStateException("Position out of bounds")
     }
 
     /**
@@ -79,19 +99,7 @@ class Board(val squares: Matrix<Square> = Matrix(8, 8) { row, col -> Square(row,
                 .filter { it::class == type }
     }
 
-    /**
-     * Removes piece from the square on given [position]
-     */
-    fun removePiece(position: Position) {
-        squares[position].piece = null
-    }
-
 }
-
-/**
- * Extension function allowing to use [Position] as an index to the receiver [Matrix]
- */
-operator fun <T> Matrix<T>.get(position: Position): T = matrix[position.row][position.col]
 
 /**
  * Print the board with pieces as unicode symbols
@@ -104,3 +112,6 @@ fun Board.printUnicode() {
         println()
     }
 }
+
+operator fun Board.get(position: Position): Square = squares[position]
+operator fun Board.get(piece: Piece): Square = squares[piece.position]

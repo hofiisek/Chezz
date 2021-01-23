@@ -1,7 +1,6 @@
 package board
 
 import game.Player
-import javafx.scene.paint.Color
 import piece.Piece
 
 /**
@@ -12,7 +11,7 @@ import piece.Piece
  *
  * @author Dominik Hoftych
  */
-data class Square(val position: Position, var piece: Piece? = null) {
+data class Square(val position: Position, val piece: Piece? = null) {
 
     /**
      * Rank (row) of this square in range from 1 to 8
@@ -44,10 +43,10 @@ data class Square(val position: Position, var piece: Piece? = null) {
 
     constructor(row: Int, col: Int, piece: Piece? = null) : this(Position(row,col), piece)
     constructor(other: Square) : this(other.position, other.piece)
-    constructor(other: Square, piece: Piece) : this(other.position, piece)
+    constructor(other: Square, piece: Piece?) : this(other.position, piece)
 
     override fun toString(): String {
-        return "Square(position='$position', text=$text, piece='${piece?.name ?: "None"})"
+        return "Square(position='$position', text=$text, piece=${piece?.name ?: "None"})"
     }
 
 }

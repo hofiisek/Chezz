@@ -38,19 +38,25 @@ class BoardView : View() {
 
     /**
      * Root gridpane that consists of a 8x8 matrix of child panes, each of those representing
-     * a single square on the chess board and listening for mouse left-clicks
+     * a single square on the chess board.
+     *
+     * Each square registers a left-mouse click listener, which will either select given piece,
+     * or move with the selected piece.
      */
     override val root = gridpane {
-        controller.getSquares().forEachRow { row ->
+        val initialBoard = Board()
+
+        initialBoard.squares.forEachRow { rowSquares ->
             row {
-                row.map { initSquareUI(this, it) }
+                rowSquares.map { initSquare(this, it.position) }
             }
         }
 
-        redrawBoard(controller.getBoard())
+        redrawBoard(initialBoard)
 
         onRightClick {
             controller.resetSelection()
+            repaintBoard()
         }
     }
 
@@ -58,14 +64,14 @@ class BoardView : View() {
      * Initialize UI of given [square], i.e. add [Rectangle] and [Label] that represent
      * the given [square] to the parent pane and register mouse left-click listener
      */
-    private fun initSquareUI(pane: Pane, square: Square) : Pane {
+    private fun initSquare(parent: Pane, position: Position) : Pane {
         // could not center the piece image other than using another nested gridpane :(
-        return pane.gridpane {
-            add(boardSquares[square.position])
-            add(boardPieces[square.position])
+        return parent.gridpane {
+            add(boardSquares[position])
+            add(boardPieces[position])
 
             onLeftClick {
-                controller.onSquareClicked(square)
+                controller.onSquareClicked(position)
             }
         }
     }
@@ -91,14 +97,10 @@ class BoardView : View() {
 
     /**
      * Redraw the whole board, i.e. repaint squares and also render pieces.
-     *
-     * @param board current board state
      */
     fun redrawBoard(board: Board) {
         repaintBoard()
-        board.squares.forEach { square ->
-            redrawPiece(square)
-        }
+        board.squares.forEach { redrawPiece(it.position, it.piece) }
     }
 
     /**
@@ -114,12 +116,10 @@ class BoardView : View() {
      * Renders the piece on given [Square] if there is any, otherwise removes
      * the piece image from given square.
      */
-    private fun redrawPiece(square: Square) {
-        boardPieces[square.position].graphic = square.piece?.img
+    private fun redrawPiece(position: Position, piece: Piece?) {
+        boardPieces[position].graphic = piece?.img
     }
 
-
     private fun getSquareColor(row: Int, col: Int): Color = if((row * 7 + col) % 2 < 1) Color.SANDYBROWN else Color.SADDLEBROWN
-
 
 }
