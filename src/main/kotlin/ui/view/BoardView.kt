@@ -10,6 +10,7 @@ import javafx.scene.shape.Rectangle
 import piece.Piece
 import tornadofx.*
 import ui.controller.BoardController
+import ui.controller.RenderObject
 
 /**
  * Main view representing the chess board UI.
@@ -18,34 +19,38 @@ import ui.controller.BoardController
  */
 class BoardView : View() {
 
+    /**
+     * Reference to controller in which mouse clicks are processed.
+     */
     private val controller: BoardController by inject()
 
     /**
-     * Matrix of [Rectangle]s that represent individual squares of the board.
+     * Matrix of [Rectangle]s that represent individual squares of the board
      */
     private val boardSquares: Matrix<Rectangle> = Matrix(8, 8) { _, _ ->
         Rectangle(0.0, 0.0, 80.0, 80.0).apply { arcWidth = 3.0; arcHeight = 3.0 }
     }
 
     /**
-     * Matrix of [Label]s that contain the piece images.
+     * Matrix of [Label]s that contain the piece images
      */
     private val boardPieces: Matrix<Label> = Matrix(8, 8) { _, _ ->
         Label().apply {
+            // workaround so the piece is centered
             GridPane.setHalignment(this, HPos.CENTER)
         }
     }
 
     /**
-     * Root gridpane that consists of a 8x8 matrix of child panes, each of those representing
+     * Root grid pane that consists of a 8x8 matrix of child panes, each of those representing
      * a single square on the chess board.
      *
      * Each square registers a left-mouse click listener, which will either select given piece,
      * or move with the selected piece.
      */
     override val root = gridpane {
-        val initialBoard = Board()
 
+        val initialBoard = Board()
         initialBoard.squares.forEachRow { rowSquares ->
             row {
                 rowSquares.map { initSquare(this, it.position) }
@@ -61,8 +66,7 @@ class BoardView : View() {
     }
 
     /**
-     * Initialize UI of given [square], i.e. add [Rectangle] and [Label] that represent
-     * the given [square] to the parent pane and register mouse left-click listener
+     * Initializes UI of the square on given [position] and registers mouse left-click listener
      */
     private fun initSquare(parent: Pane, position: Position) : Pane {
         // could not center the piece image other than using another nested gridpane :(
@@ -71,55 +75,58 @@ class BoardView : View() {
             add(boardPieces[position])
 
             onLeftClick {
-                controller.onSquareClicked(position)
+                val renderObject: RenderObject = controller.onSquareClicked(position)
+                updateView(renderObject)
             }
         }
     }
 
     /**
-     * Renders the currently selected piece
+     * Updates the view according to given [renderObject]
      */
-    fun renderSelectedPiece(selectedPiece: Piece) {
-        boardSquares[selectedPiece.position].fill = Color.OLIVE
-    }
-
-    /**
-     * Renders all allowed moves for the currently selected piece,
-     * i.e. appropriately colors squares to which the piece can be moved.
-     *
-     * @param movePositions set of positions to which it's legal to move the piece
-     */
-    fun renderAllowedMoves(movePositions: Set<Position>) {
-        movePositions.forEach {
-            boardSquares[it].fill = Color.FORESTGREEN
+    private fun updateView(renderObject: RenderObject) {
+        when (renderObject) {
+            is RenderObject.Nothing -> Unit
+            is RenderObject.UpdatedBoard -> redrawBoard(renderObject.board)
+            is RenderObject.SelectedPiece -> renderSelectedPiece(renderObject.piece, renderObject.allowedMoves)
         }
     }
 
     /**
-     * Redraw the whole board, i.e. repaint squares and also render pieces.
+     * Renders the currently selected piece and its allowed moves.
+     *
+     * @param selectedPiece the currently selected piece
+     * @param movePositions set of positions to which it's legal to move the piece
      */
-    fun redrawBoard(board: Board) {
+    private fun renderSelectedPiece(selectedPiece: Piece, movePositions: Set<Position>) {
         repaintBoard()
-        board.squares.forEach { redrawPiece(it.position, it.piece) }
+        boardSquares[selectedPiece.position].fill = Color.OLIVE
+        movePositions.forEach { boardSquares[it].fill = Color.FORESTGREEN }
     }
 
     /**
-     * Paints the board squares to default colors
+     * Redraw the whole board, i.e. repaint squares to default colors and also render pieces on their
+     * current positions
+     *
+     * @param board the updated board
      */
-    fun repaintBoard() {
+    private fun redrawBoard(board: Board) {
+        repaintBoard()
+        board.squares.forEach { boardPieces[it.position].graphic = it.piece?.img }
+    }
+
+    /**
+     * Paints the board squares to default colors.
+     */
+    private fun repaintBoard() {
         boardSquares.forEachIndexed { row, col, square ->
             square.fill = getSquareColor(row, col)
         }
     }
 
     /**
-     * Renders the piece on given [Square] if there is any, otherwise removes
-     * the piece image from given square.
+     * Returns correct color for square on given [row] and [column]
      */
-    private fun redrawPiece(position: Position, piece: Piece?) {
-        boardPieces[position].graphic = piece?.img
-    }
-
-    private fun getSquareColor(row: Int, col: Int): Color = if((row * 7 + col) % 2 < 1) Color.SANDYBROWN else Color.SADDLEBROWN
+    private fun getSquareColor(row: Int, column: Int): Color = if((row * 7 + column) % 2 < 1) Color.SANDYBROWN else Color.SADDLEBROWN
 
 }

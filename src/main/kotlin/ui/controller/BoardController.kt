@@ -15,75 +15,75 @@ import ui.view.BoardView
 class BoardController : Controller() {
 
     /**
-     * Reference to the board renderer.
+     * Currently selected piece, or null if no piece is selected
      */
-    private val boardView: BoardView by inject()
-
     private var selectedPiece: Piece? = null
-    private var moves: Map<Position, Move> = emptyMap()
+
+    /**
+     * Allowed moves of the currently selected piece, or empty map if no piece is selected
+     */
+    private var allowedMoves: Map<Position, Move> = emptyMap()
 
     /**
      * Mouse left-click listener registered on each square.
-     * Is called whenever a piece is selected or a move with the selected piece
-     * is performed.
+     * The returned [RenderObject] contains all necessary data for the [BoardView]
+     * to know what to render.
+     *
+     * @param clickedPosition position of the square that was clicked on, which initiated this event
      */
-    fun onSquareClicked(clickedPosition: Position) {
-        val clickedSquare: Square = getSquare(clickedPosition).also {
-            println("Clicked on square $it")
-        }
+    fun onSquareClicked(clickedPosition: Position): RenderObject {
+        val clickedSquare: Square = getSquare(clickedPosition)
 
-        if (selectedPiece == null) {
-            if (clickedSquare.piece != null) {
-                selectPiece(clickedSquare.piece)
-            }
-        } else {
-            moveOrReselect(clickedSquare)
+        println("Clicked on square $clickedSquare")
+
+        return when(selectedPiece) {
+            null -> if (clickedSquare.piece == null) RenderObject.Nothing else selectPiece(clickedSquare.piece)
+            else -> moveOrReselect(clickedSquare)
         }
     }
 
     /**
-     * Mouse right-click listener registered on the whole board, used to reset (i.e. deselect) the currently selected piece.
+     * Mouse right-click listener registered on the whole board, used to reset (i.e. deselect) the currently selected piece
      */
     fun resetSelection() {
         selectedPiece = null
-        moves = emptyMap()
+        allowedMoves = emptyMap()
     }
 
     /**
-     * Select given [Piece] and update the UI
+     * Selects given [clickedPiece]
      */
-    private fun selectPiece(clickedPiece: Piece) {
-        val allowedMoves: Set<Move> = clickedPiece.getAllowedMoves(GameController.currentBoard)
+    private fun selectPiece(clickedPiece: Piece): RenderObject {
+        val moves: Set<Move> = clickedPiece.getAllowedMoves(GameController.currentBoard)
         selectedPiece = clickedPiece
-        moves = allowedMoves.associateBy { it.to.position }
+        allowedMoves = moves.associateBy { it.to.position }
 
-        renderCurrentSelection()
+        return RenderObject.SelectedPiece(clickedPiece, allowedMoves.keys)
     }
 
-    /**
-     * Renders currently selected piece and all its allowed moves
-     */
-    private fun renderCurrentSelection() {
-        boardView.repaintBoard()
-        boardView.renderSelectedPiece(selectedPiece!!)
-        boardView.renderAllowedMoves(moves.keys)
-    }
 
     /**
-     * Either move with the selected piece, or select different piece, or do nothing if the move is not allowed.
+     * Based on the [clickedSquare] does one of the following:
+     * - moves with the selected piece if the [clickedSquare] is occupied by the other player (assuming the move
+     * won't put the king in check)
+     * - selects the piece occupying the [clickedSquare] if it's of the same color
+     * - does nothing if the [clickedSquare] is not in the set of allowed moves
      */
-    private fun moveOrReselect(clickedSquare: Square) {
-        when {
+    private fun moveOrReselect(clickedSquare: Square): RenderObject {
+        return when {
             clickedSquare occupiedBySamePlayerAs selectedPiece!! -> selectPiece(clickedSquare.piece!!)
-            clickedSquare.position in moves -> {
-                val updatedBoard: Board = GameController.processMove(moves.getValue(clickedSquare.position))
-                boardView.redrawBoard(updatedBoard)
+            clickedSquare.position in allowedMoves -> {
+                val newBoard: Board = GameController.processMove(allowedMoves.getValue(clickedSquare.position))
                 resetSelection()
+                RenderObject.UpdatedBoard(newBoard)
             }
-            else -> return
+            else -> RenderObject.Nothing
         }
     }
 
-    fun getSquare(position: Position): Square = GameController.currentBoard[position]
+    /**
+     * Returns the [Square] on given [position]
+     */
+    private fun getSquare(position: Position): Square = GameController.currentBoard[position]
 
 }
