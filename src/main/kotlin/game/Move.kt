@@ -9,8 +9,8 @@ import piece.Piece
  *
  * @param movingPiece the piece which is being moved with
  * @param to destination square of the move
- * @param capturedPiece piece which is captured by the move. Except for en passant moves, the captured piece equals
- * to the piece on [to] square.
+ * @param capturedPiece piece which is captured by the move, which equals to the piece on [to] square except for
+ * en passant moves
  *
  * @author Dominik Hoftych
  */

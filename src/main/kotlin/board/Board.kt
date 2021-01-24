@@ -11,7 +11,6 @@ import kotlin.reflect.KClass
  *
  * @author Dominik Hoftych
  */
-//TODO enable to index board using [position], i.e. board[position]
 class Board {
 
     /**
@@ -38,7 +37,7 @@ class Board {
 
     /**
      * Initializes a new board with the same squares as the [other] board except for the squares
-     * passed in the [squaresToUpdate] parameter.
+     * passed in the [squaresToUpdate] list
      */
     constructor(other: Board, squaresToUpdate: List<Square>) {
         val squaresToUpdateByPosition: Map<Position, Square> = squaresToUpdate.associateBy { it.position }
@@ -64,14 +63,14 @@ class Board {
     }
 
     /**
-     * Returns the [Square] based on given [Position], or throw exception if given position is not on the board
+     * Returns the [Square] on given [position], or throw exception if given position is not on the board
      */
     fun getSquare(position: Position): Square {
         return if (position.onBoard) squares[position] else throw IllegalArgumentException("Position not on board")
     }
 
     /**
-     * Returns the [Square] based on given [Position], or null if the given position is not on the board
+     * Returns the [Square] on given [position], or null if the given position is not on the board
      */
     fun getSquareOrNull(position: Position): Square? {
         return if (position.onBoard) squares[position] else null

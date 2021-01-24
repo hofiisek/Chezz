@@ -28,7 +28,7 @@ sealed class Piece(
 ) {
 
     /**
-     * Name of the piece in the "pieceType_colorLetter" format.
+     * Name of the piece in the "pieceType_colorLetter" format, e.g. Rook_b or King_w.
      * Is used when loading piece images so it MUST correspond.
      */
     abstract val name: String
@@ -47,7 +47,7 @@ sealed class Piece(
     }
 
     /**
-     * Returns the set of allowed moves of this piece w.r.t. current game state
+     * Returns the set of allowed moves of this piece w.r.t. given board
      */
     fun getAllowedMoves(board: Board): Set<Move> = MoveGenerator.generate(this, board)
 }
@@ -74,7 +74,7 @@ val Piece?.unicode: String
 
 /**
  * Moves with the piece to given [Square].
- * A new instance of [Piece] is initialized on its new position and this move
+ * A new instance of [Piece] is initialized on its new position and the move
  * is recorded in piece's history list.
  */
 infix fun Piece.moveTo(square: Square): Piece = when(this) {

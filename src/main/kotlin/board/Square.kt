@@ -4,9 +4,9 @@ import game.Player
 import piece.Piece
 
 /**
- * A single square on the board. May or may not be occupied by a piece.
+ * A single square on the board which may or may not be occupied by a piece.
  *
- * @param position [Position] on the board as a pair of x and y coordinates
+ * @param position position on the board
  * @param piece piece occupying this square, may be null
  *
  * @author Dominik Hoftych
