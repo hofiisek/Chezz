@@ -1,8 +1,7 @@
 package ui.controller
 
 import board.*
-import game.GameController
-import game.Move
+import game.*
 import piece.Piece
 import tornadofx.Controller
 import ui.view.BoardView
@@ -28,8 +27,6 @@ class BoardController : Controller() {
      * Mouse left-click listener registered on each square.
      * The returned [RenderObject] contains all necessary data for the [BoardView]
      * to know what to render.
-     *
-     * @param clickedPosition position of the square that was clicked on, which initiated this event
      */
     fun onSquareClicked(clickedPosition: Position): RenderObject {
         val clickedSquare: Square = getSquare(clickedPosition)
@@ -54,9 +51,16 @@ class BoardController : Controller() {
      * Selects given [clickedPiece]
      */
     private fun selectPiece(clickedPiece: Piece): RenderObject {
-        val moves: Set<Move> = clickedPiece.getAllowedMoves(GameController.currentBoard)
         selectedPiece = clickedPiece
-        allowedMoves = moves.associateBy { it.to.position }
+
+        val moves: Set<Move> = clickedPiece.getAllowedMoves(GameController.currentBoard)
+        allowedMoves = moves.associateBy {
+            when (it) {
+                is BasicMove -> it.to.position
+                is EnPassantMove -> it.to.position
+                is CastlingMove -> it.king.second.position
+            }
+        }
 
         return RenderObject.SelectedPiece(clickedPiece, allowedMoves.keys)
     }
@@ -82,7 +86,7 @@ class BoardController : Controller() {
     }
 
     /**
-     * Returns the [Square] on given [position]
+     * Returns the square on given [position]
      */
     private fun getSquare(position: Position): Square = GameController.currentBoard[position]
 
