@@ -1,20 +1,19 @@
 package game
 
-import board.Board
-import board.Square
-import board.add
-import board.occupiedBy
+import board.*
 import piece.*
 import kotlin.math.abs
 
 /**
  * General moves generator.
  *
- * Basic moves are generated recursively for each movement direction for all pieces apart from pawn,
+ * Basic moves are generated recursively for each movement direction for all pieces except for pawn,
  * whose movement, despite of being the most limited one, is quite special.
  *
  * Castling moves are generated for the king, because king's final destination after castling (file 'g' or 'c')
- * is non-reachable from his original position otherwise (in case of the rook, it could interfere with its other moves)
+ * is non-reachable from his original position otherwise (in case of the rook, it would interfere with its other moves)
+ *
+ * // TODO implement promotion
  *
  * @author Dominik Hoftych
  */
@@ -25,26 +24,32 @@ object MoveGenerator {
      */
     fun generate(piece: Piece, board: Board): Set<Move> = when(piece) {
         is Pawn -> pawnMoves(piece, board) and enPassant(piece, board)
-        is Rook -> rookMoves(piece, board)
-        is Knight -> knightMoves(piece, board)
-        is Bishop -> bishopMoves(piece, board)
-        is Queen -> queenMoves(piece, board)
-        is King -> kingMoves(piece, board) and castling(piece, board)
+        is King -> generateMoves(board, piece, 1) and castling(piece, board)
+        is Knight -> generateMoves(board, piece, 1)
+        is Rook -> generateMoves(board, piece, 7)
+        is Bishop -> generateMoves(board, piece, 7)
+        is Queen -> generateMoves(board, piece, 7)
     }
 
-    private fun pawnMoves(thisPawn: Piece, board: Board): Set<Move> {
-        val shiftX = if (thisPawn.player == Player.WHITE) -1 else +1
-        val currPos = thisPawn.position
+    /**
+     * Generates the "basic" moves allowed for the given [pawn]. Such basic moves include classic advance moves
+     * by 1 square forward, two square advance moves, and capture moves.
+     */
+    private fun pawnMoves(pawn: Piece, board: Board): Set<Move> {
+        val shiftX = if (pawn.player == Player.WHITE) -1 else +1
+        val currPos = pawn.position
 
         val movement: MutableList<Direction> = mutableListOf()
 
         // basic move forward by 1 square
-        Direction(shiftX, 0)
-                .takeUnless { board.getSquare(currPos add it).isOccupied }
-                ?.let { movement.add(it) }
+        with(Direction(shiftX, 0)) {
+            if (board.getSquare(currPos add this).isUnoccupied) {
+                movement.add(this)
+            }
+        }
 
         // move forward by 2 squares, if it is the first move and the skipping square is free
-        if (!thisPawn.hasMoved && !board.getSquare(currPos add Direction(shiftX, 0)).isOccupied)
+        if (!pawn.hasMoved && board.getSquare(currPos add Direction(shiftX, 0)).isUnoccupied)
             movement.add(Direction(2 * shiftX, 0))
 
         // capture moves
@@ -52,7 +57,7 @@ object MoveGenerator {
             val newPos = currPos add Direction(shiftX, shiftY)
             val newSquare = board.getSquareOrNull(newPos) ?: continue
 
-            if (newSquare occupiedBy thisPawn.theOtherPlayer) {
+            if (newSquare occupiedBy pawn.theOtherPlayer) {
                 movement.add(Direction(shiftX, shiftY))
             }
         }
@@ -60,110 +65,88 @@ object MoveGenerator {
         return movement
                 .map { shift -> currPos add shift }
                 .map { pos -> board.getSquare(pos) }
-                .map { square -> Move(thisPawn, square) }
+                .map { square -> BasicMove(pawn, square)}
                 .toSet()
     }
 
-    private fun enPassant(thisPawn: Piece, board: Board): Set<Move> {
-        val enemyPawns: List<Piece> = board.getPiecesFor(thisPawn.theOtherPlayer, Pawn::class)
+    /**
+     * Returns a set of en passant moves for given [pawn], or an empty set if no en passant
+     * moves are available considering the given [board] state.
+     */
+    private fun enPassant(pawn: Piece, board: Board): Set<Move> {
+        val enemyPawns: List<Pawn> = board.getPiecesFor(pawn.theOtherPlayer, Pawn::class)
 
         val moves: MutableSet<Move> = mutableSetOf()
 
-        for (enemyPawn in enemyPawns.map { it as Pawn }) {
-            val (advancedTwoSquares, skippedSquare) = enemyPawn.advancedTwoSquares
-            if (!advancedTwoSquares) continue
+        for (enemyPawn in enemyPawns) {
+            val skippedSquare: Position = enemyPawn.advancedTwoSquares ?: continue
 
-            val (thisRow, thisCol) = thisPawn.position
+            val (row, col) = pawn.position
             val (enemyRow, enemyCol) = enemyPawn.position
-            if (thisRow != enemyRow) continue
-            if (abs(thisCol - enemyCol) != 1) continue
+            if (row != enemyRow) continue
+            if (abs(col - enemyCol) != 1) continue
 
             // TODO check that this is done the very next move after enemy pawn's two-step advance
-            moves.add(Move(thisPawn, board.getSquare(skippedSquare), enemyPawn))
+            moves.add(EnPassantMove(pawn, board.getSquare(skippedSquare), enemyPawn))
         }
 
         return moves
     }
 
-    private fun rookMoves(thisRook: Piece, board: Board): Set<Move> {
-        val movement = setOf(
-                Direction(-1, 0), // up
-                Direction(0, 1),  // right
-                Direction(1, 0),  // down
-                Direction(0, -1)  // left
-        )
+    /**
+     * Returns a set of castling moves for given [king], or an empty set if castling is not possible
+     * considering the given [board] state.
+     */
+    private fun castling(king: Piece, board: Board): Set<Move> {
+        if (king.hasMoved) return emptySet()
 
-        return movement.flatMap { generateMoves(board, thisRook, it, 7) }.toSet()
-    }
+        val rooks: List<Rook> = board.getPiecesFor(king.player, Rook::class)
+                .filterNot { it.hasMoved }
+                .ifEmpty { return emptySet() }
 
-    private fun knightMoves(thisKnight: Piece, board: Board): Set<Move> {
-        val movement = setOf(
-                Direction(-2, 1),  // up->right
-                Direction(-1, 2),  // right->up
-                Direction(1, 2),   // right->down
-                Direction(2, 1),   // down->right
-                Direction(2, -1),  // down->left
-                Direction(1, -2),  // left->down
-                Direction(-1, -2), // left->up
-                Direction(-2, -1), // up->left
-        )
-
-        return movement.flatMap { generateMoves(board, thisKnight, it, 1) }.toSet()
-    }
-
-    private fun bishopMoves(thisBishop: Piece, board: Board): Set<Move> {
-        val movement = setOf(
-                Direction(-1,  1), // up-right
-                Direction(1,  1),  // down-right
-                Direction(1, - 1),  // down-left
-                Direction(-1, - 1)  // up-left
-        )
-
-        return movement.flatMap { generateMoves(board, thisBishop, it, 7) }.toSet()
-    }
-
-    private fun queenMoves(thisQueen: Piece, board: Board): Set<Move> {
-        val movement = setOf(
-                Direction(-1, 0),  // up
-                Direction(-1, 1),  // up-right
-                Direction(0, 1), // right
-                Direction(1, 1),  // down-right
-                Direction(1, 0),  // down
-                Direction(1, -1), // down-left
-                Direction(0, -1),  // left
-                Direction(-1, -1)  // up-left
-        )
-
-        return movement.flatMap { generateMoves(board, thisQueen, it, 7) }.toSet()
-    }
-
-    private fun kingMoves(thisKing: Piece, board: Board): Set<Move> {
-        val movement = setOf(
-                Direction(-1, 0),  // up
-                Direction(-1, 1),  // up-right
-                Direction(0, 1), // right
-                Direction(1, 1),  // down-right
-                Direction(1, 0),  // down
-                Direction(1, -1), // down-left
-                Direction(0, -1),  // left
-                Direction(-1, -1)  // up-left
-        )
-
-        return movement.flatMap { generateMoves(board, thisKing, it, 1) }.toSet()
-    }
-
-    private fun castling(thisKing: Piece, board: Board): Set<Move> {
-        return emptySet()
+        return rooks
+                .filter { rook -> squaresBetween(rook, king, board).none { it.piece != null } }
+                .map { rook ->
+                    val queenSide: Boolean = (rook.position diffCols king.position) == 4
+                    if (queenSide) {
+                        CastlingMove(rook to board.getSquare(rook moveRightBy 3), king to board.getSquare(king moveLeftBy 2), queenSide)
+                    } else {
+                        CastlingMove(rook to board.getSquare(rook moveLeftBy  2), king to board.getSquare(king moveRightBy  2), queenSide)
+                    }
+                }.toSet()
     }
 
     /**
-     * Recursively generates moves for given [Piece] along given [Direction],
-     * until either:
-     * a) an own piece is hit, or
-     * b) an enemy piece is hit, in such case the move is still included, or
-     * c) the [maxDistance] is met.
+     * Returns a list of squares that are between the given [from] and [to] pieces
      */
-    private fun generateMoves(board: Board, piece: Piece, direction: Direction, maxDistance: Int): Set<Move> {
+    private fun squaresBetween(from: Piece, to: Piece, board: Board): List<Square> {
+        require(from.position.row == to.position.row)
+
+        val fromCol = from.position.col
+        val toCol = to.position.col
+        return (1 + minOf(fromCol, toCol) until maxOf(fromCol, toCol))
+                .map { Position(to.position.row, it) }
+                .map { board.getSquare(it) }
+    }
+
+    /**
+     * Returns the position which [n] squares to the right of the receiver piece
+     */
+    private infix fun Piece.moveRightBy(n: Int) = Position(position.row, position.col + n)
+
+    /**
+     * Returns the position which [n] squares to the right of the receiver piece
+     */
+    private infix fun Piece.moveLeftBy(n: Int) = Position(position.row, position.col - n)
+
+
+    /**
+     * Recursively generates moves for given [piece] until either:
+     * - an own piece is hit, or
+     * - an enemy piece is hit, in such case the move is still included, or
+     * - the [maxDistance] parameter is met.
+     */
+    private fun generateMoves(board: Board, piece: Piece, maxDistance: Int): Set<Move> {
         fun generateMovesRecursive(dir: Direction, n: Int, moves: Set<Move> = emptySet()): Set<Move> {
             if (n > maxDistance) return moves
 
@@ -172,24 +155,32 @@ object MoveGenerator {
 
             return when {
                 newSquare occupiedBy piece.player -> moves
-                newSquare occupiedBy piece.theOtherPlayer -> moves.plus(Move(piece, newSquare))
-                else -> generateMovesRecursive(dir, n+1, moves.plus(Move(piece, newSquare)))
+                newSquare occupiedBy piece.theOtherPlayer -> moves and BasicMove(piece, newSquare)
+                else -> generateMovesRecursive(dir, n + 1, moves and BasicMove(piece, newSquare))
             }
         }
 
-        return generateMovesRecursive(direction, 1)
+        return piece.movement.flatMap { generateMovesRecursive(it, 1) }.toSet()
     }
 
     /**
-     * Multiplies the receiver [Direction] by n along both axes
+     * Multiplies the receiver [Direction] by [n] along both axes
      */
     private infix fun Direction.times(n: Int) = Direction(n * this.first, n * this.second)
 
     /**
      * Infixed and renamed [Set.plus] method
      */
-    private infix fun Set<Move>.and(other: Set<Move>) = this.plus(other)
+    private infix fun Set<Move>.and(other: Set<Move>): Set<Move> = this.plus(other)
+
+    /**
+     * Infixed and renamed [Set.plus] method
+     */
+    private infix fun Set<Move>.and(other: Move): Set<Move> = this.plus(other)
 
 }
 
-private typealias Direction = Pair<Int, Int>
+/**
+ * Direction along x and y axis respectively
+ */
+typealias Direction = Pair<Int, Int>
