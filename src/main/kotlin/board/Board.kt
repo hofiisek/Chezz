@@ -5,9 +5,10 @@ import piece.*
 import java.lang.IllegalArgumentException
 import java.lang.IllegalStateException
 import kotlin.reflect.KClass
+import kotlin.reflect.cast
 
 /**
- * Chess board with a 8x8 array of [Square]s holding the current game state.
+ * Chess board with a 8x8 matrix of [Square]s holding the current game state.
  *
  * @author Dominik Hoftych
  */
@@ -19,7 +20,7 @@ class Board {
     val squares: Matrix<Square>
 
     /**
-     * Default constructor which initializes an initial board
+     * Initializes a new board with pieces on their initial positions
      */
     constructor() {
         this.squares = Matrix(8, 8) { row, col ->
@@ -36,14 +37,14 @@ class Board {
     }
 
     /**
-     * Initializes a new board with the same squares as the [other] board except for the squares
-     * passed in the [squaresToUpdate] list
+     * Initializes a new board as a result of updating the [previous] board by given [updatedSquares]
      */
-    constructor(other: Board, squaresToUpdate: List<Square>) {
-        val squaresToUpdateByPosition: Map<Position, Square> = squaresToUpdate.associateBy { it.position }
-        this.squares = Matrix(8, 8) { row, col ->
-            val position = Position(row, col)
-            squaresToUpdateByPosition.getOrDefault(position, other.getSquare(position))
+    constructor(previous: Board, updatedSquares: List<Square>) {
+        updatedSquares.associateBy { it.position }.let {
+            this.squares = Matrix(8, 8) { row, col ->
+                val position = Position(row, col)
+                it[position] ?: previous.getSquare(position)
+            }
         }
     }
 
@@ -91,11 +92,21 @@ class Board {
     /**
      * Returns all pieces of given [player] and [type]
      */
-    fun getPiecesFor(player: Player, type: KClass<out Piece>): List<Piece> {
-        return squares.matrix.flatten()
+    fun <T: Piece> getPiecesFor(player: Player, type: KClass<T>): List<T> {
+        return squares
                 .mapNotNull { it.piece }
                 .filter { it.player == player }
-                .filter { it::class == type }
+                .filterIsInstance(type.java)
+                .map { type.cast(it) }
+    }
+
+    /**
+     * Returns all pieces for given [player]
+     */
+    fun getPiecesFor(player: Player): List<Piece> {
+        return squares
+                .mapNotNull { it.piece }
+                .filter { it.player == player }
     }
 
 }
@@ -114,3 +125,8 @@ fun Board.printUnicode() {
 
 operator fun Board.get(position: Position): Square = squares[position]
 operator fun Board.get(piece: Piece): Square = squares[piece.position]
+
+/**
+ * Updates the receiver [Board] with given [updatedSquares]
+ */
+fun Board.updateWith(updatedSquares: List<Square>) = Board(this, updatedSquares)
