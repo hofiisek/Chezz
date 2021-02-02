@@ -31,6 +31,11 @@ sealed class Piece(
     abstract val name: String
 
     /**
+     * Piece expressed in the commonly used algebraic notation
+     */
+    abstract val an: String
+
+    /**
      * Whether the piece has already moved from its original position
      */
     val hasMoved: Boolean
@@ -105,7 +110,9 @@ data class Pawn(
         override val history: MutableList<Position> = mutableListOf()
 ) : Piece(player, position, history) {
 
-    override val name = "Pawn_${player.color()}"
+    override val name: String = "Pawn_${player.color()}"
+
+    override val an: String = "P"
 
     /**
      * Helper property when evaluating the possibility of en passant moves.
@@ -132,9 +139,11 @@ data class Rook(
         override val history: MutableList<Position> = mutableListOf()
 ) : Piece(player, position, history) {
 
-    override val name = "Rook_${player.color()}"
+    override val name: String = "Rook_${player.color()}"
 
-    override val movement = setOf(
+    override val an: String = "R"
+
+    override val movement: Set<Direction> = setOf(
             Direction(-1, 0), // up
             Direction(0, 1),  // right
             Direction(1, 0),  // down
@@ -148,9 +157,11 @@ data class Knight(
         override val history: MutableList<Position> = mutableListOf()
 ) : Piece(player, position, history) {
 
-    override val name = "Knight_${player.color()}"
+    override val name: String = "Knight_${player.color()}"
 
-    override val movement = setOf(
+    override val an: String = "N"
+
+    override val movement: Set<Direction> = setOf(
             Direction(-2, 1),  // up->right
             Direction(-1, 2),  // right->up
             Direction(1, 2),   // right->down
@@ -168,9 +179,11 @@ data class Bishop(
         override val history: MutableList<Position> = mutableListOf()
 ) : Piece(player, position, history) {
 
-    override val name = "Bishop_${player.color()}"
+    override val name: String = "Bishop_${player.color()}"
 
-    override val movement = setOf(
+    override val an: String = "B"
+
+    override val movement: Set<Direction> = setOf(
             Direction(-1,  1), // up-right
             Direction(1,  1),  // down-right
             Direction(1, - 1),  // down-left
@@ -184,9 +197,11 @@ data class Queen(
         override val history: MutableList<Position> = mutableListOf()
 ) : Piece(player, position, history) {
 
-    override val name = "Queen_${player.color()}"
+    override val name: String = "Queen_${player.color()}"
 
-    override val movement = setOf(
+    override val an: String = "Q"
+
+    override val movement: Set<Direction> = setOf(
             Direction(-1, 0),  // up
             Direction(-1, 1),  // up-right
             Direction(0, 1), // right
@@ -204,9 +219,11 @@ data class King(
         override val history: MutableList<Position> = mutableListOf()
 ) : Piece(player, position, history) {
 
-    override val name = "King_${player.color()}"
+    override val name: String = "King_${player.color()}"
 
-    override val movement = setOf(
+    override val an: String = "K"
+
+    override val movement: Set<Direction> = setOf(
             Direction(-1, 0),  // up
             Direction(-1, 1),  // up-right
             Direction(0, 1), // right
