@@ -4,6 +4,8 @@ import board.Square
 import piece.Pawn
 import piece.Piece
 
+sealed class Move
+
 /**
  * Representing a single move with a piece.
  *
@@ -14,7 +16,7 @@ import piece.Piece
  *
  * @author Dominik Hoftych
  */
-data class Move(val movingPiece: Piece, val to: Square, val capturedPiece: Piece? = to.piece) {
+data class BasicMove(val movingPiece: Piece, val to: Square, val capturedPiece: Piece? = to.piece): Move() {
 
     /**
      * Whether this move is a capture move
@@ -26,3 +28,6 @@ data class Move(val movingPiece: Piece, val to: Square, val capturedPiece: Piece
      */
     val isEnPassantMove: Boolean = movingPiece is Pawn && isCaptureMove && to.piece != capturedPiece
 }
+
+data class Castling(val rook: Pair<Piece, Square>, val king: Pair<Piece, Square>) : Move()
+data class EnPassant(val pawn: Piece, val to: Square, val capturedPawn: Piece) : Move()

@@ -13,21 +13,11 @@ import piece.Piece
  */
 data class Square(val position: Position, val piece: Piece? = null) {
 
-    /**
-     * Rank (row) of this square in range from 1 to 8
-     */
-    val rank: Int = 8 - position.row
 
     /**
-     * File (column) of this square, named from 'a' to 'h'
+     * The square's position expressed in the algebraic notation
      */
-    val file: Char = charArrayOf('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h')[position.col]
-
-    /**
-     * Text representation of the position (e.g. h8, c5, ..)
-     */
-    val text: String = "${file}${rank}"
-
+    val an: String = "${position.file}${position.rank}"
 
     /**
      * Whether the square is occupied by some piece
@@ -35,19 +25,22 @@ data class Square(val position: Position, val piece: Piece? = null) {
     val isOccupied: Boolean
         get() = piece != null
 
+    /**
+     * Whether the square is unoccupied
+     */
+    val isUnoccupied: Boolean
+        get() = !isOccupied
+
     init {
         require(position.onBoard) {
             "Square out of bounds"
         }
     }
 
-    constructor(row: Int, col: Int, piece: Piece? = null) : this(Position(row,col), piece)
-    constructor(other: Square) : this(other.position, other.piece)
+    /**
+     * Initializes a new square on the same position as the given [other] square
+     */
     constructor(other: Square, piece: Piece?) : this(other.position, piece)
-
-    override fun toString(): String {
-        return "Square(position='$position', text=$text, piece=${piece?.name ?: "None"})"
-    }
 
 }
 
