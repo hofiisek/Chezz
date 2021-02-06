@@ -20,7 +20,7 @@ import kotlin.math.abs
 object MoveGenerator {
 
     /**
-     * For given [piece], generates all allowed moves considering the current [board] state.
+     * For given [piece], generates all allowed moves considering the current [board] state
      */
     fun generate(piece: Piece, board: Board): Set<Move> = when(piece) {
         is Pawn -> pawnMoves(piece, board) and enPassant(piece, board)
@@ -29,7 +29,7 @@ object MoveGenerator {
         is Rook -> generateMoves(board, piece, 7)
         is Bishop -> generateMoves(board, piece, 7)
         is Queen -> generateMoves(board, piece, 7)
-    }
+    }.filter { it.applyOn(board, simulate = true).validate() }.toSet()
 
     /**
      * Generates the "basic" moves allowed for the given [pawn]. Such basic moves include classic advance moves
@@ -79,7 +79,7 @@ object MoveGenerator {
         val moves: MutableSet<Move> = mutableSetOf()
 
         for (enemyPawn in enemyPawns) {
-            val skippedSquare: Position = enemyPawn.advancedTwoSquares ?: continue
+            val skippedSquare: Position = enemyPawn.advancedTwoSquares() ?: continue
 
             val (row, col) = pawn.position
             val (enemyRow, enemyCol) = enemyPawn.position
@@ -91,6 +91,23 @@ object MoveGenerator {
         }
 
         return moves
+    }
+
+    /**
+     * Helper property when evaluating the possibility of en passant moves.
+     *
+     * If the pawn advanced two squares as his last move, the returned position
+     * is the position of the square that was skipped during the two-square move,
+     * otherwise it's null.
+     */
+    private fun Pawn.advancedTwoSquares(): Position? = when {
+        history.size != 1 -> null
+        player == Player.BLACK && position.row != 3 -> null
+        player == Player.WHITE && position.row != 4 -> null
+        else -> {
+            val shiftX = if (player == Player.WHITE) 1 else -1
+            (position add Position(shiftX, 0))
+        }
     }
 
     /**
