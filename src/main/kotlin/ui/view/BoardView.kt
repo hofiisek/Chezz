@@ -3,6 +3,8 @@ package ui.view
 import board.*
 import javafx.geometry.HPos
 import javafx.scene.control.Label
+import javafx.scene.image.Image
+import javafx.scene.image.ImageView
 import javafx.scene.layout.GridPane
 import javafx.scene.layout.Pane
 import javafx.scene.paint.Color
@@ -68,18 +70,16 @@ class BoardView : View() {
     /**
      * Initializes UI of the square on given [position] and registers mouse left-click listener
      */
-    private fun initSquare(parent: Pane, position: Position) : Pane {
-        // could not center the piece image other than using another nested gridpane :(
-        return parent.gridpane {
-            add(boardSquares[position])
-            add(boardPieces[position])
+    private fun initSquare(parent: Pane, position: Position) : Pane = parent.gridpane {
+        add(boardSquares[position])
+        add(boardPieces[position])
 
-            onLeftClick {
-                val renderObject: RenderObject = controller.onSquareClicked(position)
-                updateView(renderObject)
-            }
+        onLeftClick {
+            val renderObject: RenderObject = controller.onSquareClicked(position)
+            updateView(renderObject)
         }
     }
+
 
     /**
      * Updates the view according to given [renderObject]
@@ -93,10 +93,7 @@ class BoardView : View() {
     }
 
     /**
-     * Renders the currently selected piece and its allowed moves.
-     *
-     * @param selectedPiece the currently selected piece
-     * @param movePositions set of positions to which it's legal to move the piece
+     * Renders the currently [selectedPiece] and its [allowed moves][movePositions]
      */
     private fun renderSelectedPiece(selectedPiece: Piece, movePositions: Set<Position>) {
         repaintBoard()
@@ -105,10 +102,8 @@ class BoardView : View() {
     }
 
     /**
-     * Redraw the whole board, i.e. repaint squares to default colors and also render pieces on their
-     * current positions
-     *
-     * @param board the updated board
+     * Redraw the board according to the given [board], i.e. repaint squares to default colors and
+     * also render pieces on their current positions
      */
     private fun redrawBoard(board: Board) {
         repaintBoard()
@@ -120,13 +115,14 @@ class BoardView : View() {
      */
     private fun repaintBoard() {
         boardSquares.forEachIndexed { row, col, square ->
-            square.fill = getSquareColor(row, col)
+            square.fill = if((row * 7 + col) % 2 < 1) Color.SANDYBROWN else Color.SADDLEBROWN
         }
     }
 
-    /**
-     * Returns correct color for square on given [row] and [column]
-     */
-    private fun getSquareColor(row: Int, column: Int): Color = if((row * 7 + column) % 2 < 1) Color.SANDYBROWN else Color.SADDLEBROWN
-
 }
+
+/**
+ * Image (icon) of the piece
+ */
+private val Piece.img: ImageView
+    get() = ImageView(Image("/pieces/${name}.png", 40.0, 40.0, true, true))
