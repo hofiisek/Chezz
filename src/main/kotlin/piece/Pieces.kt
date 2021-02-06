@@ -11,17 +11,27 @@ import java.lang.IllegalArgumentException
 
 /**
  * Abstract parent of all chess pieces, i.e. pawn, rook, bishop, knight, queen and king.
- *
- * @param player [Player] who owns this piece
- * @param position [Position] of this piece
- * @param history list of all previous [Position]s of this piece
+ * Each piece belongs to a particular [player], occupies a particular square on the [position] and
+ * records its [history], i.e. a list of previous its previous positions.
  * 
  * @author Dominik Hoftych
  */
 sealed class Piece(
-        open val player: Player,
-        open val position: Position,
-        open val history: MutableList<Position>
+
+    /**
+     * The player to whom the piece belongs
+     */
+    open val player: Player,
+
+    /**
+     * The position of the piece on the board
+     */
+    open val position: Position,
+
+    /**
+     * Ordered list of positions that were occupied by the piece previously
+     */
+    open val history: List<Position>
 ) {
 
     /**
@@ -42,13 +52,6 @@ sealed class Piece(
         get() = history.isNotEmpty()
 
     /**
-     * [ImageView] with the image of the piece
-     */
-    val img: ImageView by lazy {
-        ImageView(Image("/pieces/${name}.png", 40.0, 40.0, true, true))
-    }
-
-    /**
      * Movement of the piece defined as a set of directions along x and y axis respectively.
      * Defaults to an empty set but is overridden by each piece type except for pawn, whose movement
      * is a bit more complex.
@@ -56,9 +59,10 @@ sealed class Piece(
     open val movement: Set<Direction> = emptySet()
 
     /**
-     * Returns the set of allowed moves of this piece w.r.t. given board
+     * Returns the set of allowed moves of this piece w.r.t. given [board]
      */
     fun getAllowedMoves(board: Board): Set<Move> = MoveGenerator.generate(this, board)
+
 }
 
 /**
@@ -83,66 +87,36 @@ val Piece?.unicode: String
 
 /**
  * Moves with the piece to given [square].
- * A new instance of [Piece] is initialized on its new position and the move
- * is recorded in piece's history list.
+ * A new instance of [Piece] is initialized on its new position with the move recorded in its history list.
  */
 infix fun Piece.moveTo(square: Square): Piece = when(this) {
-    is Pawn -> Pawn(this.player, square.position, this.history plus square.position)
-    is Rook -> Rook(this.player, square.position, this.history plus square.position)
-    is Knight -> Knight(this.player, square.position, this.history plus square.position)
-    is Bishop -> Bishop(this.player, square.position, this.history plus square.position)
-    is Queen -> Queen(this.player, square.position, this.history plus square.position)
-    is King -> King(this.player, square.position, this.history plus square.position)
-}
-
-/**
- * Infixed convenience method for [List.plus] that can be applied on [MutableList]
- */
-infix fun <T> MutableList<T>.plus(element: T): MutableList<T> {
-    this.add(element)
-    return this
+    is Pawn -> Pawn(player, square.position, history.plus(square.position))
+    is Rook -> Rook(player, square.position, history.plus(square.position))
+    is Knight -> Knight(player, square.position, history.plus(square.position))
+    is Bishop -> Bishop(player, square.position, history.plus(square.position))
+    is Queen -> Queen(player, square.position, history.plus(square.position))
+    is King -> King(player, square.position, history.plus(square.position))
 }
 
 
 data class Pawn(
         override val player: Player,
         override var position: Position,
-        override val history: MutableList<Position> = mutableListOf()
+        override val history: List<Position> = listOf()
 ) : Piece(player, position, history) {
 
     override val name: String = "Pawn_${player.color()}"
-
     override val an: String = "P"
-
-    /**
-     * Helper property when evaluating the possibility of en passant moves.
-     *
-     * If the pawn advanced two squares as his last move, the returned position
-     * is the position of the square that was skipped during the two-square move,
-     * otherwise it's null.
-     */
-    val advancedTwoSquares: Position?
-        get() = when {
-            history.size != 1 -> null
-            player == Player.BLACK && position.row != 3 -> null
-            player == Player.WHITE && position.row != 4 -> null
-            else -> {
-                val shiftX = if (player == Player.WHITE) 1 else -1
-                (position add Position(shiftX, 0))
-            }
-        }
 }
 
 data class Rook(
         override val player: Player,
         override var position: Position,
-        override val history: MutableList<Position> = mutableListOf()
+        override val history: List<Position> = listOf()
 ) : Piece(player, position, history) {
 
     override val name: String = "Rook_${player.color()}"
-
     override val an: String = "R"
-
     override val movement: Set<Direction> = setOf(
             Direction(-1, 0), // up
             Direction(0, 1),  // right
@@ -154,13 +128,11 @@ data class Rook(
 data class Knight(
         override val player: Player,
         override var position: Position,
-        override val history: MutableList<Position> = mutableListOf()
+        override val history: List<Position> = listOf()
 ) : Piece(player, position, history) {
 
     override val name: String = "Knight_${player.color()}"
-
     override val an: String = "N"
-
     override val movement: Set<Direction> = setOf(
             Direction(-2, 1),  // up->right
             Direction(-1, 2),  // right->up
@@ -176,13 +148,11 @@ data class Knight(
 data class Bishop(
         override val player: Player,
         override var position: Position,
-        override val history: MutableList<Position> = mutableListOf()
+        override val history: List<Position> = listOf()
 ) : Piece(player, position, history) {
 
     override val name: String = "Bishop_${player.color()}"
-
     override val an: String = "B"
-
     override val movement: Set<Direction> = setOf(
             Direction(-1,  1), // up-right
             Direction(1,  1),  // down-right
@@ -194,13 +164,11 @@ data class Bishop(
 data class Queen(
         override val player: Player,
         override var position: Position,
-        override val history: MutableList<Position> = mutableListOf()
+        override val history: List<Position> = listOf()
 ) : Piece(player, position, history) {
 
     override val name: String = "Queen_${player.color()}"
-
     override val an: String = "Q"
-
     override val movement: Set<Direction> = setOf(
             Direction(-1, 0),  // up
             Direction(-1, 1),  // up-right
@@ -216,13 +184,11 @@ data class Queen(
 data class King(
         override val player: Player,
         override var position: Position,
-        override val history: MutableList<Position> = mutableListOf()
+        override val history: List<Position> = listOf()
 ) : Piece(player, position, history) {
 
     override val name: String = "King_${player.color()}"
-
     override val an: String = "K"
-
     override val movement: Set<Direction> = setOf(
             Direction(-1, 0),  // up
             Direction(-1, 1),  // up-right
