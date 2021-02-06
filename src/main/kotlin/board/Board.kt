@@ -1,6 +1,7 @@
 package board
 
 import game.Player
+import game.theOtherPlayer
 import piece.*
 import java.lang.IllegalArgumentException
 import java.lang.IllegalStateException
@@ -20,7 +21,12 @@ class Board {
     val squares: Matrix<Square>
 
     /**
-     * Initializes a new board with pieces on their initial positions
+     * The player who is on the turn
+     */
+    val playerOnTurn: Player
+
+    /**
+     * Initializes a new board with pieces on their initial positions and the white player on turn
      */
     constructor() {
         this.squares = Matrix(8, 8) { row, col ->
@@ -34,18 +40,21 @@ class Board {
             }
             Square(position, piece)
         }
+        this.playerOnTurn = Player.WHITE
     }
 
     /**
-     * Initializes a new board as a result of updating the [previous] board by given [updatedSquares]
+     * Initializes a new board as a result of updating the [previous] board by given [updatedSquares].
+     * If [takeTurns] is true, the players take turns.
      */
-    constructor(previous: Board, updatedSquares: List<Square>) {
+    constructor(previous: Board, updatedSquares: List<Square>, takeTurns: Boolean = false) {
         updatedSquares.associateBy { it.position }.let {
             this.squares = Matrix(8, 8) { row, col ->
                 val position = Position(row, col)
                 it[position] ?: previous.getSquare(position)
             }
         }
+        this.playerOnTurn = if (takeTurns) previous.playerOnTurn.theOtherPlayer else previous.playerOnTurn
     }
 
     /**
@@ -112,6 +121,11 @@ class Board {
 }
 
 /**
+ * Updates the board with given [squares] with players taking turns if [takeTurns] is true
+ */
+fun Board.updateWith(squares: List<Square>, takeTurns: Boolean = false) = Board(this, squares, takeTurns)
+
+/**
  * Print the board with pieces as unicode symbols
  */
 fun Board.printUnicode() {
@@ -123,10 +137,12 @@ fun Board.printUnicode() {
     }
 }
 
-operator fun Board.get(position: Position): Square = squares[position]
+/**
+ * Returns the square occupied by the given [piece]
+ */
 operator fun Board.get(piece: Piece): Square = squares[piece.position]
 
 /**
- * Updates the receiver [Board] with given [updatedSquares]
+ * Returns the square with the given [position]
  */
-fun Board.updateWith(updatedSquares: List<Square>) = Board(this, updatedSquares)
+operator fun Board.get(position: Position): Square = squares[position]
