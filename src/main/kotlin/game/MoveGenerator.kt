@@ -20,16 +20,20 @@ import kotlin.math.abs
 object MoveGenerator {
 
     /**
-     * For given [piece], generates all allowed moves considering the current [board] state
+     * For given [piece], generates all allowed moves considering the current [board] state.
+     * If [validateForCheck] is true, for each move the it is validated that it does not put or leave
+     * its own king in check.
      */
-    fun generate(piece: Piece, board: Board): Set<Move> = when(piece) {
+    fun generate(piece: Piece, board: Board, validateForCheck: Boolean = true): Set<Move> = when(piece) {
         is Pawn -> pawnMoves(piece, board) and enPassant(piece, board)
         is King -> generateMoves(board, piece, 1) and castling(piece, board)
         is Knight -> generateMoves(board, piece, 1)
         is Rook -> generateMoves(board, piece, 7)
         is Bishop -> generateMoves(board, piece, 7)
         is Queen -> generateMoves(board, piece, 7)
-    }.filter { it.applyOn(board, simulate = true).validate() }.toSet()
+    }.filter {
+        if (validateForCheck) it.applyOn(board, simulate = true).kingNotInCheck() else true
+    }.toSet()
 
     /**
      * Generates the "basic" moves allowed for the given [pawn]. Such basic moves include classic advance moves
@@ -49,8 +53,12 @@ object MoveGenerator {
         }
 
         // move forward by 2 squares, if it is the first move and the skipping square is free
-        if (!pawn.hasMoved && board.getSquare(currPos add Direction(shiftX, 0)).isUnoccupied)
+        if (!pawn.hasMoved
+            && board.getSquare(currPos add Direction(shiftX, 0)).isUnoccupied
+            && board.getSquare(currPos add Direction(2 * shiftX, 0)).isUnoccupied
+        ) {
             movement.add(Direction(2 * shiftX, 0))
+        }
 
         // capture moves
         for (shiftY in arrayOf(-1, 1)) {
