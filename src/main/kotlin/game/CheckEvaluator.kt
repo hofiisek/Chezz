@@ -11,7 +11,7 @@ import piece.Piece
  */
 fun Position.isInCheck(board: Board): Boolean {
     val enemyPieces: List<Piece> = board.getPiecesFor(board.playerOnTurn.theOtherPlayer)
-    return !enemyPieces
+    return enemyPieces
         .map { it.getAllowedMoves(board = board, validateForCheck = false) }
         .flatten()
         .mapNotNull {
@@ -30,9 +30,42 @@ fun Position.isInCheck(board: Board): Boolean {
 fun Square.isInCheck(board: Board) = position.isInCheck(board)
 
 /**
- * Returns true if the board is valid, i.e. the king of the player on turn is not in check
+ * Returns true if the piece is in check w.r.t given [board] state
  */
-fun Board.kingNotInCheck(): Boolean {
-    val king: King = getPiecesFor(playerOnTurn, King::class).first()
+fun Piece.isInCheck(board: Board) = position.isInCheck(board)
+
+/**
+ * Returns true if the king of the player on turn is in check
+ */
+fun Board.isCheck(): Boolean {
+    val king = getKing()
     return king.position.isInCheck(this)
 }
+
+/**
+ * Returns true if the king of the player on turn is not in check
+ */
+fun Board.isNotCheck(): Boolean = !isCheck()
+
+/**
+ * Returns true if the king of the player on turn has been checkmated
+ */
+fun Board.isCheckMate(): Boolean {
+    val king = getKing()
+    return king.isInCheck(this) && king.getAllowedMoves(this).isEmpty()
+}
+
+/**
+ * Returns true if the stalemate occurred
+ */
+fun Board.isStaleMate(): Boolean {
+    val king = getKing()
+    //return !king.isInCheck(this) && king.getAllowedMoves(this).isEmpty()
+    return false
+}
+
+/**
+ * Returns the king of the player on turn
+ */
+fun Board.getKing(): Piece = getPiecesFor(playerOnTurn, King::class).first()
+
