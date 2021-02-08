@@ -59,7 +59,11 @@ sealed class Piece(
     open val movement: Set<Direction> = emptySet()
 
     /**
-     * Returns the set of allowed moves of this piece w.r.t. given [board]
+     * Returns the set of allowed moves w.r.t. given [board].
+     * If [validateForCheck] is false, the resulting list may contain moves that
+     * would put or leave the king in check, which is not allowed in the game.
+     * However, such moves are still considered check moves,
+     * see https://www.fide.com/FIDE/handbook/LawsOfChess.pdf, paragraph 3.1.
      */
     fun getAllowedMoves(board: Board, validateForCheck: Boolean = true): Set<Move> =
         MoveGenerator.generate(this, board, validateForCheck)
