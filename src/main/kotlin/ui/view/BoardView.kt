@@ -1,6 +1,7 @@
 package ui.view
 
 import board.*
+import game.getKing
 import javafx.geometry.HPos
 import javafx.scene.control.Label
 import javafx.scene.image.Image
@@ -9,6 +10,7 @@ import javafx.scene.layout.GridPane
 import javafx.scene.layout.Pane
 import javafx.scene.paint.Color
 import javafx.scene.shape.Rectangle
+import piece.King
 import piece.Piece
 import tornadofx.*
 import ui.controller.BoardController
@@ -89,6 +91,9 @@ class BoardView : View() {
             is RenderObject.Nothing -> Unit
             is RenderObject.UpdatedBoard -> redrawBoard(renderObject.board)
             is RenderObject.SelectedPiece -> renderSelectedPiece(renderObject.piece, renderObject.allowedMoves)
+            is RenderObject.Check -> renderCheck(renderObject.board)
+            is RenderObject.Checkmate -> 0//renderCheckmate()
+            is RenderObject.Stalemate -> -0//renderStalemate()
         }
     }
 
@@ -118,6 +123,13 @@ class BoardView : View() {
             square.fill = if((row * 7 + col) % 2 < 1) Color.SANDYBROWN else Color.SADDLEBROWN
         }
     }
+
+    private fun renderCheck(board: Board) {
+        redrawBoard(board)
+        boardSquares[board.getKing().position].fill = Color.RED
+    }
+
+
 
 }
 

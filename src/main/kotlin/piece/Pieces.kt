@@ -61,7 +61,8 @@ sealed class Piece(
     /**
      * Returns the set of allowed moves of this piece w.r.t. given [board]
      */
-    fun getAllowedMoves(board: Board): Set<Move> = MoveGenerator.generate(this, board)
+    fun getAllowedMoves(board: Board, validateForCheck: Boolean = true): Set<Move> =
+        MoveGenerator.generate(this, board, validateForCheck)
 
 }
 

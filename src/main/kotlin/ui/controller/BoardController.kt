@@ -85,8 +85,15 @@ class BoardController : Controller() {
             clickedSquare.position in allowedMoves -> {
                 currentBoard = allowedMoves[clickedSquare.position]!!.applyOn(currentBoard)
                 resetSelection()
-                RenderObject.UpdatedBoard(currentBoard)
+                when {
+                    currentBoard.isCheck() -> RenderObject.Check(currentBoard)
+                    currentBoard.isCheckMate() -> RenderObject.Checkmate
+                    currentBoard.isStaleMate() -> RenderObject.Stalemate
+                    else -> RenderObject.UpdatedBoard(currentBoard)
+                }
             }
+            // TODO handle checkmate and stalemate
+            // TODO render check
             else -> RenderObject.Nothing
         }
     }
