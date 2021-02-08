@@ -32,7 +32,7 @@ object MoveGenerator {
         is Bishop -> generateMoves(board, piece, 7)
         is Queen -> generateMoves(board, piece, 7)
     }.filter {
-        if (validateForCheck) it.applyOn(board, simulate = true).kingNotInCheck() else true
+        if (validateForCheck) it.applyOn(board = board, simulate = true).isNotCheck() else true
     }.toSet()
 
     /**
