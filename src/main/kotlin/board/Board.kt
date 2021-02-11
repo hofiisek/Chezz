@@ -26,19 +26,26 @@ class Board {
     val playerOnTurn: Player
 
     /**
-     * Initializes a new board with pieces on their initial positions and the white player on turn
+     * If [setPieces] is true, initializes a new board with pieces on their initial positions
+     * and the white player on turn. Otherwise, an empty board without pieces is initialized.
      */
-    constructor() {
+    constructor(setPieces: Boolean = true) {
         this.squares = Matrix(8, 8) { row, col ->
             val position = Position(row, col)
-            val piece = when(row) {
-                0 -> resolvePiece(Player.BLACK, position)
-                1 -> Pawn(Player.BLACK, position)
-                6 -> Pawn(Player.WHITE, position)
-                7 -> resolvePiece(Player.WHITE, position)
-                else -> null
+            if (setPieces) {
+                Square(
+                    position = position,
+                    piece = when(row) {
+                        0 -> resolvePiece(Player.BLACK, position)
+                        1 -> Pawn(Player.BLACK, position)
+                        6 -> Pawn(Player.WHITE, position)
+                        7 -> resolvePiece(Player.WHITE, position)
+                        else -> null
+                    }
+                )
+            } else {
+                Square(position, null)
             }
-            Square(position, piece)
         }
         this.playerOnTurn = Player.WHITE
     }
@@ -116,6 +123,11 @@ class Board {
         return squares
                 .mapNotNull { it.piece }
                 .filter { it.player == player }
+    }
+
+    companion object {
+        val EMPTY = Board(setPieces = false)
+        val INITIAL = Board()
     }
 
 }
