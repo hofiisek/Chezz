@@ -1,7 +1,7 @@
 package ui.view
 
 import board.*
-import game.getKing
+import game.*
 import javafx.geometry.HPos
 import javafx.scene.control.Label
 import javafx.scene.image.Image
@@ -10,11 +10,10 @@ import javafx.scene.layout.GridPane
 import javafx.scene.layout.Pane
 import javafx.scene.paint.Color
 import javafx.scene.shape.Rectangle
-import piece.King
 import piece.Piece
 import tornadofx.*
 import ui.controller.BoardController
-import ui.controller.RenderObject
+import ui.controller.ViewUpdate
 
 /**
  * Main view representing the chess board UI.
@@ -53,15 +52,11 @@ class BoardView : View() {
      * or move with the selected piece.
      */
     override val root = gridpane {
-
-        val initialBoard = Board()
-        initialBoard.squares.forEachRow { rowSquares ->
-            row {
-                rowSquares.map { initSquare(this, it.position) }
-            }
+        Board.EMPTY.squares.forEachRow { rowSquares ->
+            row { rowSquares.map { initSquare(this, it.position) } }
         }
 
-        redrawBoard(initialBoard)
+        repaintBoard()
 
         onRightClick {
             controller.resetSelection()
@@ -77,33 +72,46 @@ class BoardView : View() {
         add(boardPieces[position])
 
         onLeftClick {
-            val renderObject: RenderObject = controller.onSquareClicked(position)
-            updateView(renderObject)
-        }
-    }
-
-
-    /**
-     * Updates the view according to given [renderObject]
-     */
-    private fun updateView(renderObject: RenderObject) {
-        when (renderObject) {
-            is RenderObject.Nothing -> Unit
-            is RenderObject.UpdatedBoard -> redrawBoard(renderObject.board)
-            is RenderObject.SelectedPiece -> renderSelectedPiece(renderObject.piece, renderObject.allowedMoves)
-            is RenderObject.Check -> renderCheck(renderObject.board)
-            is RenderObject.Checkmate -> 0//renderCheckmate()
-            is RenderObject.Stalemate -> -0//renderStalemate()
+            val update: ViewUpdate = controller.onSquareClicked(position)
+            updateView(update)
         }
     }
 
     /**
-     * Renders the currently [selectedPiece] and its [allowed moves][movePositions]
+     * Wipes any current game state and runs a new game starting in given [gameState].
+     * If no [gameState] is provided, a fresh game is started with pieces in their
+     * initial positions and white player on turn.
      */
-    private fun renderSelectedPiece(selectedPiece: Piece, movePositions: Set<Position>) {
+    fun startGame(gameState: Board = Board.INITIAL) {
+        val update: ViewUpdate = controller.startGame(gameState)
+        updateView(update)
+    }
+
+    /**
+     * Updates the view according to given [viewUpdate]
+     */
+    private fun updateView(viewUpdate: ViewUpdate) {
+        when (viewUpdate) {
+            is ViewUpdate.Nothing -> Unit
+            is ViewUpdate.BoardChanged -> redrawBoard(viewUpdate.board)
+            is ViewUpdate.PieceSelected -> renderSelectedPiece(
+                viewUpdate.piece,
+                viewUpdate.allowedMoves,
+                viewUpdate.checkedKing
+            )
+        }
+    }
+
+    /**
+     * Renders the currently selected [piece] and [squares] to which it is allowed to move.
+     */
+    private fun renderSelectedPiece(piece: Piece, squares: Set<Square>, checkedKing: Piece?) {
         repaintBoard()
-        boardSquares[selectedPiece.position].fill = Color.OLIVE
-        movePositions.forEach { boardSquares[it].fill = Color.FORESTGREEN }
+        if (checkedKing != null) {
+            boardSquares[checkedKing.position].fill = Color.RED
+        }
+        boardSquares[piece.position].fill = Color.OLIVE
+        squares.forEach { boardSquares[it.position].fill = Color.FORESTGREEN }
     }
 
     /**
@@ -112,11 +120,19 @@ class BoardView : View() {
      */
     private fun redrawBoard(board: Board) {
         repaintBoard()
-        board.squares.forEach { boardPieces[it.position].graphic = it.piece?.img }
+        board.squares.forEach { boardPieces[it.position].graphic = it.piece?.icon }
+        if (board.isCheck()) {
+            boardSquares[board.getKing().position].fill = Color.RED
+        }
+        if (board.isCheckmate()) {
+            find<EndgameDialog>(EndgameDialog::result to GameResult.Checkmate(board.playerOnTurn.theOtherPlayer))
+                .openModal()
+            // TODO separate to different method together with stalemate?
+        }
     }
 
     /**
-     * Paints the board squares to default colors.
+     * Paints the board squares to default colors
      */
     private fun repaintBoard() {
         boardSquares.forEachIndexed { row, col, square ->
@@ -124,17 +140,10 @@ class BoardView : View() {
         }
     }
 
-    private fun renderCheck(board: Board) {
-        redrawBoard(board)
-        boardSquares[board.getKing().position].fill = Color.RED
-    }
-
-
-
 }
 
 /**
  * Image (icon) of the piece
  */
-private val Piece.img: ImageView
+private val Piece.icon: ImageView
     get() = ImageView(Image("/pieces/${name}.png", 40.0, 40.0, true, true))
