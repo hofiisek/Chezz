@@ -50,18 +50,16 @@ fun Board.isNotCheck(): Boolean = !isCheck()
 /**
  * Returns true if the king of the player on turn has been checkmated
  */
-fun Board.isCheckMate(): Boolean {
+fun Board.isCheckmate(): Boolean {
     val king = getKing()
-    return king.isInCheck(this) && king.getAllowedMoves(this).isEmpty()
+    return isCheck() && king.getAllowedMoves(this).isEmpty()
 }
 
 /**
  * Returns true if the stalemate occurred
  */
-fun Board.isStaleMate(): Boolean {
-    val king = getKing()
-    //return !king.isInCheck(this) && king.getAllowedMoves(this).isEmpty()
-    return false
+fun Board.isStalemate(): Boolean {
+    return !isCheck() && getPiecesFor(playerOnTurn).all { it.getAllowedMoves(this).isEmpty() }
 }
 
 /**
