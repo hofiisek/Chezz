@@ -5,6 +5,8 @@ import game.*
 import piece.Piece
 import tornadofx.Controller
 import ui.view.BoardView
+import kotlin.properties.Delegates
+import kotlin.properties.Delegates.observable
 
 /**
  * Main controller of the chess board UI.
@@ -16,7 +18,9 @@ class BoardController : Controller() {
     /**
      * The current board state
      */
-    private var currentBoard: Board = Board()
+    private var currentBoard: Board by observable(initialValue = Board.EMPTY) { _, _, _ ->
+        resetSelection()
+    }
 
     /**
      * Currently selected piece, or null if no piece is selected
@@ -26,20 +30,20 @@ class BoardController : Controller() {
     /**
      * Allowed moves of the currently selected piece, or empty map if no piece is selected
      */
-    private var allowedMoves: Map<Position, Move> = emptyMap()
+    private var allowedMovesBySquare: Map<Square, Move> = emptyMap()
 
     /**
      * Mouse left-click listener registered on each square.
-     * The returned [RenderObject] contains all necessary data for the [BoardView]
+     * The returned [ViewUpdate] contains all necessary data for the [BoardView]
      * to know what to render.
      */
-    fun onSquareClicked(clickedPosition: Position): RenderObject {
+    fun onSquareClicked(clickedPosition: Position): ViewUpdate {
         val clickedSquare: Square = currentBoard[clickedPosition]
 
         println("Clicked on square $clickedSquare")
 
         return when(selectedPiece) {
-            null -> if (clickedSquare.piece == null) RenderObject.Nothing else selectPiece(clickedSquare.piece)
+            null -> if (clickedSquare.piece == null) ViewUpdate.Nothing else selectPiece(clickedSquare.piece)
             else -> moveOrReselect(clickedSquare)
         }
     }
@@ -49,26 +53,39 @@ class BoardController : Controller() {
      */
     fun resetSelection() {
         selectedPiece = null
-        allowedMoves = emptyMap()
+        allowedMovesBySquare = emptyMap()
+    }
+
+    /**
+     * Wipes any current game state and runs a new game starting in given [gameState].
+     * If no [gameState] is provided, a fresh game is started with pieces in their
+     * initial positions and white player on turn.
+     */
+    fun startGame(gameState: Board): ViewUpdate {
+        currentBoard = gameState
+        return ViewUpdate.BoardChanged(currentBoard)
     }
 
     /**
      * Selects given [piece]
      */
-    private fun selectPiece(piece: Piece): RenderObject {
-        if (piece.player != currentBoard.playerOnTurn) return RenderObject.Nothing
+    private fun selectPiece(piece: Piece): ViewUpdate {
+        if (piece.player != currentBoard.playerOnTurn) return ViewUpdate.Nothing
 
-        val moves: Set<Move> = piece.getAllowedMoves(currentBoard)
-        allowedMoves = moves.associateBy {
+        allowedMovesBySquare = piece.getAllowedMoves(currentBoard).associateBy {
             when (it) {
-                is BasicMove -> it.to.position
-                is EnPassantMove -> it.to.position
-                is CastlingMove -> it.king.second.position
+                is BasicMove -> it.to
+                is EnPassantMove -> it.to
+                is CastlingMove -> it.king.second
             }
         }
         selectedPiece = piece
 
-        return RenderObject.SelectedPiece(piece, allowedMoves.keys)
+        return ViewUpdate.PieceSelected(
+            piece = piece,
+            allowedMoves = allowedMovesBySquare.keys,
+            checkedKing = if (currentBoard.isCheck()) currentBoard.getKing() else null
+        )
     }
 
 
@@ -79,22 +96,14 @@ class BoardController : Controller() {
      * - selects the piece occupying the [clickedSquare] if it's of the same color
      * - does nothing if the [clickedSquare] is not in the set of allowed moves
      */
-    private fun moveOrReselect(clickedSquare: Square): RenderObject {
+    private fun moveOrReselect(clickedSquare: Square): ViewUpdate {
         return when {
             clickedSquare occupiedBySamePlayerAs selectedPiece!! -> selectPiece(clickedSquare.piece!!)
-            clickedSquare.position in allowedMoves -> {
-                currentBoard = allowedMoves[clickedSquare.position]!!.applyOn(currentBoard)
-                resetSelection()
-                when {
-                    currentBoard.isCheck() -> RenderObject.Check(currentBoard)
-                    currentBoard.isCheckMate() -> RenderObject.Checkmate
-                    currentBoard.isStaleMate() -> RenderObject.Stalemate
-                    else -> RenderObject.UpdatedBoard(currentBoard)
-                }
+            clickedSquare in allowedMovesBySquare -> {
+                currentBoard = allowedMovesBySquare.getValue(clickedSquare).applyOn(currentBoard)
+                ViewUpdate.BoardChanged(currentBoard)
             }
-            // TODO handle checkmate and stalemate
-            // TODO render check
-            else -> RenderObject.Nothing
+            else -> ViewUpdate.Nothing
         }
     }
 
