@@ -10,15 +10,25 @@ import tornadofx.*
  */
 class MenuView : View() {
 
+    private val view: BoardView by inject()
+
     override val root =  menubar {
-        menu("File") {
-            item("Save", "Shortcut+S").action {
-                println("Saving! Ehh.. not yet")
+        menu("Play") {
+            item("New game").action {
+                view.startGame()
             }
-            item("Load", "Shortcut+L").action {
-                println("Loading!....")
+            item("Load game").action {
+                // TODO
             }
-            item("Quit","Shortcut+Q").action {
+        }
+        menu("State") {
+            item("Save game").action {
+                // TODO
+            }
+            item("Undo last move").action {
+                // TODO
+            }
+            item("Quit").action {
                 Platform.exit()
             }
         }
