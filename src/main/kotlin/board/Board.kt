@@ -3,8 +3,6 @@ package board
 import game.Player
 import game.theOtherPlayer
 import piece.*
-import java.lang.IllegalArgumentException
-import java.lang.IllegalStateException
 import kotlin.reflect.KClass
 import kotlin.reflect.cast
 
@@ -26,57 +24,62 @@ class Board {
     val playerOnTurn: Player
 
     /**
-     * If [setPieces] is true, initializes a new board with pieces on their initial positions
-     * and the white player on turn. Otherwise, an empty board without pieces is initialized.
+     * The previous state of the game (enables the "undo" feature)
+     */
+    val previousBoard: Board?
+
+    /**
+     * Initializes a new board with pieces on their initial positions and the white player
+     * on turn if [setPieces] is true, or an empty board without pieces
      */
     constructor(setPieces: Boolean = true) {
         this.squares = Matrix(8, 8) { row, col ->
             val position = Position(row, col)
-            if (setPieces) {
-                Square(
-                    position = position,
-                    piece = when(row) {
-                        0 -> resolvePiece(Player.BLACK, position)
-                        1 -> Pawn(Player.BLACK, position)
-                        6 -> Pawn(Player.WHITE, position)
-                        7 -> resolvePiece(Player.WHITE, position)
-                        else -> null
-                    }
-                )
-            } else {
+            if (!setPieces) {
                 Square(position, null)
+            } else {
+                Square(position, resolvePiece(position))
             }
         }
         this.playerOnTurn = Player.WHITE
+        this.previousBoard = null
     }
 
     /**
-     * Initializes a new board as a result of updating the [previous] board by given [updatedSquares].
-     * If [takeTurns] is true, the players take turns.
+     * Initializes a new board as a result of updating the [previousBoard] with
+     * given [squares][updatedSquaresByPosition]. If [takeTurns] is true, the players take turns.
      */
-    constructor(previous: Board, updatedSquares: List<Square>, takeTurns: Boolean = false) {
-        updatedSquares.associateBy { it.position }.let {
-            this.squares = Matrix(8, 8) { row, col ->
-                val position = Position(row, col)
-                it[position] ?: previous.getSquare(position)
-            }
+    constructor(
+        previousBoard: Board,
+        updatedSquaresByPosition: Map<Position, Square> = emptyMap(),
+        takeTurns: Boolean = false
+    ) {
+        this.squares = Matrix(8, 8) { row, col ->
+            val position = Position(row, col)
+            updatedSquaresByPosition[position] ?: previousBoard.getSquare(position)
         }
-        this.playerOnTurn = if (takeTurns) previous.playerOnTurn.theOtherPlayer else previous.playerOnTurn
+        this.playerOnTurn = if (takeTurns) previousBoard.playerOnTurn.theOtherPlayer else previousBoard.playerOnTurn
+        this.previousBoard = previousBoard
     }
 
+
     /**
-     * Based on the column of given [position] and given [player], initializes and returns correct piece
+     * Initializes and returns correct piece based on given [position]
      */
-    private fun resolvePiece(player: Player, position: Position): Piece = when(position.col) {
-        0 -> Rook(player, position)
-        1 -> Knight(player, position)
-        2 -> Bishop(player, position)
-        3 -> Queen(player, position)
-        4 -> King(player, position)
-        5 -> Bishop(player, position)
-        6 -> Knight(player, position)
-        7 -> Rook(player, position)
-        else -> throw IllegalStateException("Position out of bounds")
+    private fun resolvePiece(position: Position): Piece? {
+        val player: Player = if (position.row in 0..1) Player.BLACK else Player.WHITE
+        return when (position.row) {
+            1, 6 -> Pawn(player, position)
+            0, 7 -> when(position.col) {
+                0, 7 -> Rook(player, position)
+                1, 6 -> Knight(player, position)
+                2, 5 -> Bishop(player, position)
+                3 -> Queen(player, position)
+                4 -> King(player, position)
+                else -> throw IllegalArgumentException("Position out of bounds")
+            }
+            else -> null
+        }
     }
 
     /**
@@ -100,10 +103,6 @@ class Board {
         return getSquare(piece.position)
     }
 
-    /**
-     * Returns the piece on the [Square] on given [position], or null if there's no piece
-     */
-    fun getPiece(position: Position): Piece? = squares[position].piece
 
     /**
      * Returns all pieces of given [player] and [type]
@@ -126,7 +125,15 @@ class Board {
     }
 
     companion object {
+
+        /**
+         * An empty chess board without pieces
+         */
         val EMPTY = Board(setPieces = false)
+
+        /**
+         * Chess board with pieces in initial positions
+         */
         val INITIAL = Board()
     }
 
@@ -135,26 +142,5 @@ class Board {
 /**
  * Updates the board with given [squares] with players taking turns if [takeTurns] is true
  */
-fun Board.updateWith(squares: List<Square>, takeTurns: Boolean = false) = Board(this, squares, takeTurns)
-
-/**
- * Print the board with pieces as unicode symbols
- */
-fun Board.printUnicode() {
-    squares.forEachRow { row ->
-        row.forEach { square ->
-            print(" ${square.piece.unicode} ")
-        }
-        println()
-    }
-}
-
-/**
- * Returns the square occupied by the given [piece]
- */
-operator fun Board.get(piece: Piece): Square = squares[piece.position]
-
-/**
- * Returns the square with the given [position]
- */
-operator fun Board.get(position: Position): Square = squares[position]
+fun Board.updateWith(squares: List<Square>, takeTurns: Boolean = false) =
+    Board(this, squares.associateBy { it.position }, takeTurns)

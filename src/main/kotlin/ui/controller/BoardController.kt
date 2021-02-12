@@ -38,13 +38,54 @@ class BoardController : Controller() {
      * to know what to render.
      */
     fun onSquareClicked(clickedPosition: Position): ViewUpdate {
-        val clickedSquare: Square = currentBoard[clickedPosition]
+        val clickedSquare: Square = currentBoard.getSquare(clickedPosition)
 
         println("Clicked on square $clickedSquare")
 
         return when(selectedPiece) {
             null -> if (clickedSquare.piece == null) ViewUpdate.Nothing else selectPiece(clickedSquare.piece)
             else -> moveOrReselect(clickedSquare)
+        }
+    }
+
+    /**
+     * Selects given [piece] and returns a [ViewUpdate] with the selected piece,
+     * its allowed moves, and the king in check, if there is any
+     */
+    private fun selectPiece(piece: Piece): ViewUpdate {
+        if (piece.player != currentBoard.playerOnTurn) return ViewUpdate.Nothing
+
+        allowedMovesBySquare = piece.getAllowedMoves(currentBoard).associateBy {
+            when (it) {
+                is BasicMove -> it.to
+                is EnPassantMove -> it.to
+                is CastlingMove -> it.king.second
+            }
+        }
+        selectedPiece = piece
+
+        return ViewUpdate.PieceSelected(
+            piece = piece,
+            allowedMoves = allowedMovesBySquare.keys,
+            checkedKing = if (currentBoard.isCheck()) currentBoard.getKing() else null
+        )
+    }
+
+    /**
+     * Based on the [clickedSquare] either
+     * - moves with the selected piece if the [clickedSquare] is occupied by the other player (assuming the move
+     * won't put the king in check)
+     * - selects the piece occupying the [clickedSquare] if it's of the same color
+     * - does nothing if the [clickedSquare] is not in the set of allowed moves
+     */
+    private fun moveOrReselect(clickedSquare: Square): ViewUpdate {
+        return when {
+            clickedSquare occupiedBySamePlayerAs selectedPiece!! -> selectPiece(clickedSquare.piece!!)
+            clickedSquare in allowedMovesBySquare -> {
+                currentBoard = allowedMovesBySquare.getValue(clickedSquare).applyOn(currentBoard)
+                ViewUpdate.BoardChanged(currentBoard)
+            }
+            else -> ViewUpdate.Nothing
         }
     }
 
@@ -66,45 +107,18 @@ class BoardController : Controller() {
         return ViewUpdate.BoardChanged(currentBoard)
     }
 
-    /**
-     * Selects given [piece]
-     */
-    private fun selectPiece(piece: Piece): ViewUpdate {
-        if (piece.player != currentBoard.playerOnTurn) return ViewUpdate.Nothing
-
-        allowedMovesBySquare = piece.getAllowedMoves(currentBoard).associateBy {
-            when (it) {
-                is BasicMove -> it.to
-                is EnPassantMove -> it.to
-                is CastlingMove -> it.king.second
-            }
-        }
-        selectedPiece = piece
-
-        return ViewUpdate.PieceSelected(
-            piece = piece,
-            allowedMoves = allowedMovesBySquare.keys,
-            checkedKing = if (currentBoard.isCheck()) currentBoard.getKing() else null
-        )
-    }
-
 
     /**
-     * Based on the [clickedSquare] either
-     * - moves with the selected piece if the [clickedSquare] is occupied by the other player (assuming the move
-     * won't put the king in check)
-     * - selects the piece occupying the [clickedSquare] if it's of the same color
-     * - does nothing if the [clickedSquare] is not in the set of allowed moves
+     * Undoes the last move
      */
-    private fun moveOrReselect(clickedSquare: Square): ViewUpdate {
-        return when {
-            clickedSquare occupiedBySamePlayerAs selectedPiece!! -> selectPiece(clickedSquare.piece!!)
-            clickedSquare in allowedMovesBySquare -> {
-                currentBoard = allowedMovesBySquare.getValue(clickedSquare).applyOn(currentBoard)
-                ViewUpdate.BoardChanged(currentBoard)
-            }
-            else -> ViewUpdate.Nothing
-        }
+    fun undoLastMove(): ViewUpdate {
+        currentBoard = currentBoard.previousBoard ?: currentBoard
+        return ViewUpdate.BoardChanged(currentBoard)
     }
+
+    /**
+     * Returns true if a game is currently being played
+     */
+    fun isGameStarted(): Boolean = currentBoard != Board.EMPTY
 
 }

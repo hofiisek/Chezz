@@ -14,6 +14,8 @@ import piece.Piece
 import tornadofx.*
 import ui.controller.BoardController
 import ui.controller.ViewUpdate
+import ui.controller.ViewUpdate.*
+import ui.controller.ViewUpdate.Nothing
 
 /**
  * Main view representing the chess board UI.
@@ -38,10 +40,7 @@ class BoardView : View() {
      * Matrix of [Label]s that contain the piece images
      */
     private val boardPieces: Matrix<Label> = Matrix(8, 8) { _, _ ->
-        Label().apply {
-            // workaround so the piece is centered
-            GridPane.setHalignment(this, HPos.CENTER)
-        }
+        Label().apply { GridPane.setHalignment(this, HPos.CENTER) }
     }
 
     /**
@@ -88,16 +87,27 @@ class BoardView : View() {
     }
 
     /**
-     * Updates the view according to given [viewUpdate]
+     * Undoes the last played move
      */
-    private fun updateView(viewUpdate: ViewUpdate) {
-        when (viewUpdate) {
-            is ViewUpdate.Nothing -> Unit
-            is ViewUpdate.BoardChanged -> redrawBoard(viewUpdate.board)
-            is ViewUpdate.PieceSelected -> renderSelectedPiece(
-                viewUpdate.piece,
-                viewUpdate.allowedMoves,
-                viewUpdate.checkedKing
+    fun undoLastMove() {
+        val update: ViewUpdate = controller.undoLastMove()
+        updateView(update)
+    }
+
+    /**
+     * Updates the view according to given [update]
+     */
+    private fun updateView(update: ViewUpdate) {
+        when (update) {
+            is Nothing -> Unit
+            is BoardChanged -> {
+                redrawBoard(update.board)
+                checkGameOver(update.board)
+            }
+            is PieceSelected -> renderSelectedPiece(
+                update.piece,
+                update.allowedMoves,
+                update.checkedKing
             )
         }
     }
@@ -124,11 +134,23 @@ class BoardView : View() {
         if (board.isCheck()) {
             boardSquares[board.getKing().position].fill = Color.RED
         }
-        if (board.isCheckmate()) {
-            find<EndgameDialog>(EndgameDialog::result to GameResult.Checkmate(board.playerOnTurn.theOtherPlayer))
-                .openModal()
-            // TODO separate to different method together with stalemate?
+    }
+
+    /**
+     * Checks whether the game ends or continues
+     */
+    private fun checkGameOver(board: Board) {
+        when {
+            board.isCheckmate() -> endGame(GameResult.Checkmate(board.playerOnTurn.theOtherPlayer))
+            board.isStalemate() -> endGame(GameResult.Stalemate)
         }
+    }
+
+    /**
+     * Ends the game by popping up a window
+     */
+    private fun endGame(result: GameResult) {
+        find<EndgameDialog>(EndgameDialog::result to result).openModal()
     }
 
     /**
