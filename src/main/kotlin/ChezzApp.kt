@@ -4,6 +4,9 @@ import tornadofx.App
 import tornadofx.launch
 import ui.view.ChezzAppView
 
+/**
+ * Application window
+ */
 class ChezzApp : App(ChezzAppView::class) {
 
     override fun start(stage: Stage) {
