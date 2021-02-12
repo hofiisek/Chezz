@@ -20,7 +20,6 @@ sealed class Move {
     abstract val an: String
 }
 
-
 /**
  * Basic move with the [piece] to the [to] square. May be a capture move if there's an enemy piece.
  */

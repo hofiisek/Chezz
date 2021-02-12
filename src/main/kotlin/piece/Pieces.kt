@@ -3,11 +3,7 @@ package piece
 import board.Board
 import board.Position
 import board.Square
-import board.add
 import game.*
-import javafx.scene.image.Image
-import javafx.scene.image.ImageView
-import java.lang.IllegalArgumentException
 
 /**
  * Abstract parent of all chess pieces, i.e. pawn, rook, bishop, knight, queen and king.
@@ -16,24 +12,23 @@ import java.lang.IllegalArgumentException
  * 
  * @author Dominik Hoftych
  */
-sealed class Piece(
+sealed class Piece {
 
     /**
      * The player to whom the piece belongs
      */
-    open val player: Player,
+    abstract val player: Player
 
     /**
      * The position of the piece on the board
      */
-    open val position: Position,
+    abstract val position: Position
 
     /**
      * Ordered list of positions that were occupied by the piece previously
      */
-    open val history: List<Position>
-) {
-
+    abstract val history: List<Position>
+    
     /**
      * Name of the piece in the "pieceType_colorLetter" format, e.g. Rook_b or King_w.
      * Is used when loading piece images so it MUST correspond.
@@ -50,6 +45,12 @@ sealed class Piece(
      */
     val hasMoved: Boolean
         get() = history.isNotEmpty()
+
+    /**
+     * The opposite player
+     */
+    val theOtherPlayer: Player
+        get() = if (player == Player.WHITE) Player.BLACK else Player.WHITE
 
     /**
      * Movement of the piece defined as a set of directions along x and y axis respectively.
@@ -71,26 +72,6 @@ sealed class Piece(
 }
 
 /**
- * The opposite [Player], i.e. the player who does NOT own the piece
- */
-val Piece.theOtherPlayer: Player
-    get() = if (this.player == Player.WHITE) Player.BLACK else Player.WHITE
-
-/**
- * The unicode symbol of the piece, or throws exception of the receiver piece is null
- */
-val Piece?.unicode: String
-    get() = when(this) {
-        is Pawn -> if (player == Player.WHITE) "\u2659" else "\u265F"
-        is Rook -> if (player == Player.WHITE) "\u2656" else "\u265C"
-        is Knight -> if (player == Player.WHITE) "\u2658" else "\u265E"
-        is Bishop -> if (player == Player.WHITE) "\u2657" else "\u265D"
-        is Queen -> if (player == Player.WHITE) "\u2655" else "\u265B"
-        is King -> if (player == Player.WHITE) "\u2654" else "\u265A"
-        else -> throw IllegalArgumentException("Receiver piece is null")
-    }
-
-/**
  * Moves with the piece to given [square].
  * A new instance of [Piece] is initialized on its new position with the move recorded in its history list.
  */
@@ -103,23 +84,22 @@ infix fun Piece.moveTo(square: Square): Piece = when(this) {
     is King -> King(player, square.position, history.plus(square.position))
 }
 
-
 data class Pawn(
         override val player: Player,
-        override var position: Position,
+        override val position: Position,
         override val history: List<Position> = listOf()
-) : Piece(player, position, history) {
-
+) : Piece() {
+    
     override val name: String = "Pawn_${player.color()}"
     override val an: String = "P"
 }
 
 data class Rook(
         override val player: Player,
-        override var position: Position,
+        override val position: Position,
         override val history: List<Position> = listOf()
-) : Piece(player, position, history) {
-
+) : Piece() {
+    
     override val name: String = "Rook_${player.color()}"
     override val an: String = "R"
     override val movement: Set<Direction> = setOf(
@@ -132,10 +112,10 @@ data class Rook(
 
 data class Knight(
         override val player: Player,
-        override var position: Position,
+        override val position: Position,
         override val history: List<Position> = listOf()
-) : Piece(player, position, history) {
-
+) : Piece() {
+    
     override val name: String = "Knight_${player.color()}"
     override val an: String = "N"
     override val movement: Set<Direction> = setOf(
@@ -152,10 +132,10 @@ data class Knight(
 
 data class Bishop(
         override val player: Player,
-        override var position: Position,
+        override val position: Position,
         override val history: List<Position> = listOf()
-) : Piece(player, position, history) {
-
+) : Piece() {
+    
     override val name: String = "Bishop_${player.color()}"
     override val an: String = "B"
     override val movement: Set<Direction> = setOf(
@@ -168,10 +148,10 @@ data class Bishop(
 
 data class Queen(
         override val player: Player,
-        override var position: Position,
+        override val position: Position,
         override val history: List<Position> = listOf()
-) : Piece(player, position, history) {
-
+) : Piece() {
+    
     override val name: String = "Queen_${player.color()}"
     override val an: String = "Q"
     override val movement: Set<Direction> = setOf(
@@ -188,10 +168,10 @@ data class Queen(
 
 data class King(
         override val player: Player,
-        override var position: Position,
+        override val position: Position,
         override val history: List<Position> = listOf()
-) : Piece(player, position, history) {
-
+) : Piece() {
+    
     override val name: String = "King_${player.color()}"
     override val an: String = "K"
     override val movement: Set<Direction> = setOf(
@@ -205,3 +185,18 @@ data class King(
             Direction(-1, -1)  // up-left
     )
 }
+
+/**
+ * The unicode symbol of the piece, or throws exception of the receiver piece is null
+ * // TODO move somewhere else?
+ */
+val Piece?.unicode: String
+    get() = when(this) {
+        is Pawn -> if (player == Player.WHITE) "\u2659" else "\u265F"
+        is Rook -> if (player == Player.WHITE) "\u2656" else "\u265C"
+        is Knight -> if (player == Player.WHITE) "\u2658" else "\u265E"
+        is Bishop -> if (player == Player.WHITE) "\u2657" else "\u265D"
+        is Queen -> if (player == Player.WHITE) "\u2655" else "\u265B"
+        is King -> if (player == Player.WHITE) "\u2654" else "\u265A"
+        else -> throw IllegalArgumentException("Receiver piece is null")
+    }
