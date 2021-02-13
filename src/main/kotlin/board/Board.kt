@@ -1,6 +1,8 @@
 package board
 
+import game.Move
 import game.Player
+import game.perform
 import game.theOtherPlayer
 import piece.*
 import kotlin.reflect.KClass
@@ -29,6 +31,11 @@ class Board {
     val previousBoard: Board?
 
     /**
+     * History of played moves
+     */
+    val playedMoves: List<Move>
+
+    /**
      * Initializes a new board with pieces on their initial positions and the white player
      * on turn if [setPieces] is true, or an empty board without pieces
      */
@@ -43,6 +50,7 @@ class Board {
         }
         this.playerOnTurn = Player.WHITE
         this.previousBoard = null
+        this.playedMoves = emptyList()
     }
 
     /**
@@ -52,7 +60,8 @@ class Board {
     constructor(
         previousBoard: Board,
         updatedSquaresByPosition: Map<Position, Square> = emptyMap(),
-        takeTurns: Boolean = false
+        takeTurns: Boolean = false,
+        playedMoves: List<Move>
     ) {
         this.squares = Matrix(8, 8) { row, col ->
             val position = Position(row, col)
@@ -60,8 +69,8 @@ class Board {
         }
         this.playerOnTurn = if (takeTurns) previousBoard.playerOnTurn.theOtherPlayer else previousBoard.playerOnTurn
         this.previousBoard = previousBoard
+        this.playedMoves = playedMoves
     }
-
 
     /**
      * Initializes and returns correct piece based on given [position]
@@ -140,7 +149,18 @@ class Board {
 }
 
 /**
- * Updates the board with given [squares] with players taking turns if [takeTurns] is true
+ * Plays the given [move] and returns an updated board with the move recorded
+ * in the list of played moves. If [takeTurns] is true, the players take turn.
  */
-fun Board.updateWith(squares: List<Square>, takeTurns: Boolean = false) =
-    Board(this, squares.associateBy { it.position }, takeTurns)
+fun Board.playMove(move: Move, takeTurns: Boolean = true) = Board(
+    previousBoard = this,
+    updatedSquaresByPosition = move.perform().associateBy { it.position },
+    takeTurns = takeTurns,
+    playedMoves = playedMoves.plus(move)
+)
+
+/**
+ * Simulates the given [move] and returns an updated board. Contrary to the [playMove] method,
+ * the players do not take turns.
+ */
+fun Board.simulateMove(move: Move) = playMove(move = move, takeTurns = false)
