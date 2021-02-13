@@ -1,6 +1,5 @@
 package board
 
-import kotlin.math.abs
 
 /**
  * Specific position on the chess board.
@@ -27,6 +26,14 @@ data class Position(val row: Int, val col: Int) {
     }
 
     /**
+     * The position expressed in the algebraic notation
+     */
+    val an: String by lazy {
+        "${file}${rank}"
+    }
+
+
+    /**
      * Whether the position is on the board
      */
     val onBoard: Boolean = row in (0..7) && col in (0..7)
@@ -34,8 +41,5 @@ data class Position(val row: Int, val col: Int) {
 
 infix fun Position.add(other: Position) = Position(this.row + other.row, this.col + other.col)
 infix fun Position.add(other: Pair<Int, Int>) = this add Position(other.first, other.second)
-infix fun Position.add(square: Square) = this add square.position
 
-fun Position.add(x: Int, y: Int) = this add Position(x, y)
-
-infix fun Position.diffCols(other: Position): Int = abs(this.col - other.col)
+infix fun Position.sub(other: Pair<Int, Int>) = Position(this.row - other.first, this.col - other.second)
