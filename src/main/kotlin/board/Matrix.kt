@@ -16,6 +16,8 @@ package board
  * @param cols number of cols
  * @param initializer lambda function providing current row and column to initialize matrix elements
  *
+ * TODO is this the right way? :((
+ *
  * @author Dominik Hoftych
  */
 data class Matrix<T>(

@@ -14,7 +14,6 @@ import kotlin.properties.ObservableProperty
 class MenuView : View() {
 
     private val view: BoardView by inject()
-    private val controller: BoardController by inject()
 
     override val root =  menubar {
         menu("Play") {
@@ -31,7 +30,7 @@ class MenuView : View() {
             }
             item("Undo last move") {
                 action {
-                    if (controller.isGameStarted()) view.undoLastMove()
+                    view.undoLastMove()
                 }
             }
             item("Quit").action {
