@@ -18,7 +18,7 @@ fun Position.isInCheck(board: Board): Boolean {
             // we are only concerned about basic moves, because kings can't be captured en passant,
             // and castling can't capture at all
             when (it) {
-                is BasicMove -> it.to.position
+                is BasicMove -> it.to
                 else -> null
             }
         }.contains(this)

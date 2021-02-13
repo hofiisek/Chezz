@@ -2,7 +2,6 @@ package piece
 
 import board.Board
 import board.Position
-import board.Square
 import game.*
 
 /**
@@ -72,16 +71,16 @@ sealed class Piece {
 }
 
 /**
- * Moves with the piece to given [square].
+ * Moves with the piece to the square in given [position].
  * A new instance of [Piece] is initialized on its new position with the move recorded in its history list.
  */
-infix fun Piece.moveTo(square: Square): Piece = when(this) {
-    is Pawn -> Pawn(player, square.position, history.plus(square.position))
-    is Rook -> Rook(player, square.position, history.plus(square.position))
-    is Knight -> Knight(player, square.position, history.plus(square.position))
-    is Bishop -> Bishop(player, square.position, history.plus(square.position))
-    is Queen -> Queen(player, square.position, history.plus(square.position))
-    is King -> King(player, square.position, history.plus(square.position))
+infix fun Piece.moveTo(position: Position): Piece = when(this) {
+    is Pawn -> Pawn(player, position, history.plus(position))
+    is Rook -> Rook(player, position, history.plus(position))
+    is Knight -> Knight(player, position, history.plus(position))
+    is Bishop -> Bishop(player, position, history.plus(position))
+    is Queen -> Queen(player, position, history.plus(position))
+    is King -> King(player, position, history.plus(position))
 }
 
 data class Pawn(
@@ -92,6 +91,11 @@ data class Pawn(
     
     override val name: String = "Pawn_${player.color()}"
     override val an: String = "P"
+
+    /**
+     * Direction along rows (either up or down based on pawn's color)
+     */
+    val rowDirection: Int = if (player == Player.WHITE) -1 else 1
 }
 
 data class Rook(
