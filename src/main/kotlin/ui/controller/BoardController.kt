@@ -4,8 +4,9 @@ import board.*
 import game.*
 import piece.Piece
 import tornadofx.Controller
+import ui.controller.ViewUpdate.*
+import ui.controller.ViewUpdate.Nothing
 import ui.view.BoardView
-import kotlin.properties.Delegates
 import kotlin.properties.Delegates.observable
 
 /**
@@ -20,10 +21,12 @@ class BoardController : Controller() {
      */
     private var currentBoard: Board by observable(initialValue = Board.EMPTY) { _, _, _ ->
         resetSelection()
+        // TODO consider calling view.updateView here? make it more observer pattern
     }
 
     /**
      * Currently selected piece, or null if no piece is selected
+     * TODO could be observable and calling view.updateView?
      */
     private var selectedPiece: Piece? = null
 
@@ -43,7 +46,7 @@ class BoardController : Controller() {
         println("Clicked on square $clickedSquare")
 
         return when(selectedPiece) {
-            null -> if (clickedSquare.piece == null) ViewUpdate.Nothing else selectPiece(clickedSquare.piece)
+            null -> if (clickedSquare.piece == null) Nothing else selectPiece(clickedSquare.piece)
             else -> moveOrReselect(clickedSquare)
         }
     }
@@ -53,18 +56,18 @@ class BoardController : Controller() {
      * its allowed moves, and the king in check, if there is any
      */
     private fun selectPiece(piece: Piece): ViewUpdate {
-        if (piece.player != currentBoard.playerOnTurn) return ViewUpdate.Nothing
+        if (piece.player != currentBoard.playerOnTurn) return Nothing
 
+        selectedPiece = piece
         allowedMovesBySquare = piece.getAllowedMoves(currentBoard).associateBy {
             when (it) {
-                is BasicMove -> it.to
-                is EnPassantMove -> it.to
-                is CastlingMove -> it.king.second
+                is BasicMove -> currentBoard.getSquare(it.to)
+                is EnPassantMove -> currentBoard.getSquare(it.to)
+                is CastlingMove -> currentBoard.getSquare(it.king.second)
             }
         }
-        selectedPiece = piece
 
-        return ViewUpdate.PieceSelected(
+        return PieceSelected(
             piece = piece,
             allowedMoves = allowedMovesBySquare.keys,
             checkedKing = if (currentBoard.isCheck()) currentBoard.getKing() else null
@@ -82,10 +85,10 @@ class BoardController : Controller() {
         return when {
             clickedSquare occupiedBySamePlayerAs selectedPiece!! -> selectPiece(clickedSquare.piece!!)
             clickedSquare in allowedMovesBySquare -> {
-                currentBoard = allowedMovesBySquare.getValue(clickedSquare).applyOn(currentBoard)
-                ViewUpdate.BoardChanged(currentBoard)
+                currentBoard = currentBoard.playMove(allowedMovesBySquare.getValue(clickedSquare))
+                BoardChanged(currentBoard)
             }
-            else -> ViewUpdate.Nothing
+            else -> Nothing
         }
     }
 
@@ -104,21 +107,18 @@ class BoardController : Controller() {
      */
     fun startGame(gameState: Board): ViewUpdate {
         currentBoard = gameState
-        return ViewUpdate.BoardChanged(currentBoard)
+        return BoardChanged(currentBoard)
     }
 
 
     /**
      * Undoes the last move
      */
-    fun undoLastMove(): ViewUpdate {
-        currentBoard = currentBoard.previousBoard ?: currentBoard
-        return ViewUpdate.BoardChanged(currentBoard)
+    fun undoLastMove(): ViewUpdate = when (currentBoard) {
+        Board.EMPTY -> Nothing
+        else -> {
+            currentBoard = currentBoard.previousBoard ?: currentBoard
+            BoardChanged(currentBoard)
+        }
     }
-
-    /**
-     * Returns true if a game is currently being played
-     */
-    fun isGameStarted(): Boolean = currentBoard != Board.EMPTY
-
 }
