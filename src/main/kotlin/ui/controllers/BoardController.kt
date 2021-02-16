@@ -2,6 +2,7 @@ package ui.controllers
 
 import board.*
 import game.*
+import piece.Pawn
 import piece.Piece
 import tornadofx.Controller
 import ui.controllers.ViewUpdate.*
@@ -18,11 +19,15 @@ class BoardController : Controller() {
     private val boardView: BoardView by inject()
 
     /**
-     * The current board state, updating the [boardView] on each change
+     * The current board state. On each change, it resets the current selection,
+     * updates the [boardView] according to the new board state, checks for promotion,
+     * and checks whether the game hasn't ended yet
      */
     private var currentBoard: Board by observable(initialValue = Board.EMPTY) { _, _, newBoard ->
         resetSelection()
         boardView.updateView(BoardChanged(newBoard))
+        checkForPromotion()
+        checkGameOver()
     }
 
     /**
@@ -89,6 +94,27 @@ class BoardController : Controller() {
                 currentBoard = currentBoard.playMove(allowedMovesBySquare.getValue(clickedSquare))
             }
         }
+    }
+
+    /**
+     * Checks whether the game has ended and call board view if necessary
+     */
+    private fun checkGameOver() {
+        when {
+            currentBoard.isCheckmate() -> boardView.endTheGame(GameResult.Checkmate(currentBoard.playerOnTurn.theOtherPlayer))
+            currentBoard.isStalemate() -> boardView.endTheGame(GameResult.Stalemate)
+        }
+    }
+
+    /**
+     * Checks whether some pawn needs to be promotion and call board view if necessary
+     */
+    private fun checkForPromotion() {
+        currentBoard.getPiecesFor(currentBoard.playerOnTurn.theOtherPlayer, Pawn::class)
+            .firstOrNull { it.position.row == 0 || it.position.row == 7 }
+            ?.let {
+                boardView.promotePawn(it)
+            }
     }
 
     /**

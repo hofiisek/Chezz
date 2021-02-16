@@ -17,7 +17,7 @@ import ui.controllers.BoardController
 import ui.controllers.ViewUpdate
 import ui.controllers.ViewUpdate.*
 import ui.controllers.ViewUpdate.Nothing
-import ui.dialogs.EndgameDialog
+import ui.dialogs.GameOverDialog
 import ui.dialogs.PromotionDialog
 
 /**
@@ -54,8 +54,13 @@ class BoardView : View() {
      * or move with the selected piece.
      */
     override val root = gridpane {
+        // empty board at first, is redrawn once the game starts
         Board.EMPTY.squares.forEachRow { rowSquares ->
-            row { rowSquares.map { initSquare(this, it.position) } }
+            row {
+                rowSquares.forEach {
+                    add(initSquare(it.position))
+                }
+            }
         }
 
         repaintBoard()
@@ -67,9 +72,12 @@ class BoardView : View() {
     }
 
     /**
-     * Initializes UI of the square on given [position] and registers mouse left-click listener
+     * Initializes UI of the square on given [position] and registers mouse left-click listener on it.
+     *
+     * Unfortunate hack: the square UI needs to be another grid pane to have the piece icon centered within it.
+     * (so in result, we have a grid pane of 8x8 grid panes..)
      */
-    private fun initSquare(parent: Pane, position: Position) : Pane = parent.gridpane {
+    private fun initSquare(position: Position) = gridpane {
         add(boardSquares[position])
         add(boardPieces[position])
 
@@ -78,33 +86,19 @@ class BoardView : View() {
         }
     }
 
-
     /**
      * Updates the view according to given [update]
      */
     fun updateView(update: ViewUpdate) {
         when (update) {
             is Nothing -> Unit
-            is BoardChanged -> {
-                checkGameOver(update.board)
-                redrawBoard(update.board)
-                checkForPromotion(update.board)
-            }
+            is BoardChanged -> redrawBoard(update.board)
             is PieceSelected -> renderSelectedPiece(
                 update.piece,
                 update.allowedMoves,
                 update.checkedKing
             )
         }
-    }
-
-    private fun checkForPromotion(board: Board) {
-        // TODO possibly move to controller?
-        board.getPiecesFor(board.playerOnTurn.theOtherPlayer, Pawn::class)
-            .firstOrNull { it.position.row == 0 || it.position.row == 7 }
-            ?.let {
-                find<PromotionDialog>(PromotionDialog::pawnToPromote to it).openModal(StageStyle.UNDECORATED)
-            }
     }
 
     /**
@@ -132,29 +126,26 @@ class BoardView : View() {
     }
 
     /**
-     * Checks whether the game ends or continues
-     */
-    private fun checkGameOver(board: Board) {
-        when {
-            board.isCheckmate() -> endGame(GameResult.Checkmate(board.playerOnTurn.theOtherPlayer))
-            board.isStalemate() -> endGame(GameResult.Stalemate)
-        }
-    }
-
-    /**
-     * Ends the game by popping up a window
-     */
-    private fun endGame(result: GameResult) {
-        find<EndgameDialog>(EndgameDialog::result to result).openModal()
-    }
-
-    /**
      * Paints the board squares to default colors
      */
     private fun repaintBoard() {
         boardSquares.forEachIndexed { row, col, square ->
             square.fill = if((row * 7 + col) % 2 < 1) Color.SANDYBROWN else Color.SADDLEBROWN
         }
+    }
+
+    /**
+     * Ends the game by popping up a window showing given game [result]
+     */
+    fun endTheGame(result: GameResult) {
+        find<GameOverDialog>(GameOverDialog::result to result).openModal()
+    }
+
+    /**
+     * Shows the promotion window
+     */
+    fun promotePawn(pawn: Pawn) {
+        find<PromotionDialog>(PromotionDialog::pawnToPromote to pawn).openModal(StageStyle.UNDECORATED)
     }
 
 }
