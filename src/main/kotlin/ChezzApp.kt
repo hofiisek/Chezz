@@ -2,7 +2,7 @@ import javafx.scene.image.Image
 import javafx.stage.Stage
 import tornadofx.App
 import tornadofx.launch
-import ui.view.ChezzAppView
+import ui.views.ChezzAppView
 
 /**
  * Application window

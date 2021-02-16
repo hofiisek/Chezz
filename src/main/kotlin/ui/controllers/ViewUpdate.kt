@@ -1,11 +1,9 @@
-package ui.controller
+package ui.controllers
 
 import board.Board
-import board.Position
 import board.Square
-import game.Player
 import piece.Piece
-import ui.view.BoardView
+import ui.views.BoardView
 
 /**
  * Changed to be rendered in the [BoardView].

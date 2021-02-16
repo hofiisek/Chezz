@@ -1,4 +1,4 @@
-package ui.view
+package ui.views
 
 import tornadofx.View
 import tornadofx.vbox

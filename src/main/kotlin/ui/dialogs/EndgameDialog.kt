@@ -1,4 +1,4 @@
-package ui.view
+package ui.views
 
 import game.GameResult
 import javafx.application.Platform

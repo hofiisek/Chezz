@@ -1,12 +1,11 @@
-package ui.controller
+package ui.controllers
 
 import board.*
 import game.*
 import piece.Piece
 import tornadofx.Controller
-import ui.controller.ViewUpdate.*
-import ui.controller.ViewUpdate.Nothing
-import ui.view.BoardView
+import ui.controllers.ViewUpdate.*
+import ui.views.BoardView
 import kotlin.properties.Delegates.observable
 
 /**
@@ -16,17 +15,18 @@ import kotlin.properties.Delegates.observable
  */
 class BoardController : Controller() {
 
+    private val boardView: BoardView by inject()
+
     /**
-     * The current board state
+     * The current board state, updating the [boardView] on each change
      */
-    private var currentBoard: Board by observable(initialValue = Board.EMPTY) { _, _, _ ->
+    private var currentBoard: Board by observable(initialValue = Board.EMPTY) { _, _, newBoard ->
         resetSelection()
-        // TODO consider calling view.updateView here? make it more observer pattern
+        boardView.updateView(BoardChanged(newBoard))
     }
 
     /**
      * Currently selected piece, or null if no piece is selected
-     * TODO could be observable and calling view.updateView?
      */
     private var selectedPiece: Piece? = null
 
@@ -40,14 +40,15 @@ class BoardController : Controller() {
      * The returned [ViewUpdate] contains all necessary data for the [BoardView]
      * to know what to render.
      */
-    fun onSquareClicked(clickedPosition: Position): ViewUpdate {
+    fun onSquareClicked(clickedPosition: Position) {
         val clickedSquare: Square = currentBoard.getSquare(clickedPosition)
 
         println("Clicked on square $clickedSquare")
 
-        return when(selectedPiece) {
-            null -> if (clickedSquare.piece == null) Nothing else selectPiece(clickedSquare.piece)
-            else -> moveOrReselect(clickedSquare)
+        if (selectedPiece == null) {
+            if (clickedSquare.piece != null) selectPiece(clickedSquare.piece)
+        } else {
+            moveOrReselect(clickedSquare)
         }
     }
 
@@ -55,8 +56,8 @@ class BoardController : Controller() {
      * Selects given [piece] and returns a [ViewUpdate] with the selected piece,
      * its allowed moves, and the king in check, if there is any
      */
-    private fun selectPiece(piece: Piece): ViewUpdate {
-        if (piece.player != currentBoard.playerOnTurn) return Nothing
+    private fun selectPiece(piece: Piece) {
+        if (piece.player != currentBoard.playerOnTurn) return
 
         selectedPiece = piece
         allowedMovesBySquare = piece.getAllowedMoves(currentBoard).associateBy {
@@ -67,11 +68,11 @@ class BoardController : Controller() {
             }
         }
 
-        return PieceSelected(
+        boardView.updateView(PieceSelected(
             piece = piece,
             allowedMoves = allowedMovesBySquare.keys,
             checkedKing = if (currentBoard.isCheck()) currentBoard.getKing() else null
-        )
+        ))
     }
 
     /**
@@ -81,14 +82,12 @@ class BoardController : Controller() {
      * - selects the piece occupying the [clickedSquare] if it's of the same color
      * - does nothing if the [clickedSquare] is not in the set of allowed moves
      */
-    private fun moveOrReselect(clickedSquare: Square): ViewUpdate {
-        return when {
+    private fun moveOrReselect(clickedSquare: Square) {
+        when {
             clickedSquare occupiedBySamePlayerAs selectedPiece!! -> selectPiece(clickedSquare.piece!!)
             clickedSquare in allowedMovesBySquare -> {
                 currentBoard = currentBoard.playMove(allowedMovesBySquare.getValue(clickedSquare))
-                BoardChanged(currentBoard)
             }
-            else -> Nothing
         }
     }
 
@@ -101,24 +100,29 @@ class BoardController : Controller() {
     }
 
     /**
-     * Wipes any current game state and runs a new game starting in given [gameState].
+     * Wipes any current game state and runs game starting in given [gameState].
      * If no [gameState] is provided, a fresh game is started with pieces in their
      * initial positions and white player on turn.
      */
-    fun startGame(gameState: Board): ViewUpdate {
+    fun startGame(gameState: Board = Board.INITIAL) {
         currentBoard = gameState
-        return BoardChanged(currentBoard)
     }
 
 
     /**
-     * Undoes the last move
+     * Undoes the last move, or does nothing if the game hasn't started yet
      */
-    fun undoLastMove(): ViewUpdate = when (currentBoard) {
-        Board.EMPTY -> Nothing
-        else -> {
+    fun undoLastMove() {
+        if (currentBoard != Board.EMPTY) {
             currentBoard = currentBoard.previousBoard ?: currentBoard
-            BoardChanged(currentBoard)
         }
+    }
+
+    /**
+     * Promotes the pawn to the [promotedPiece]. The pawn being promoted is the pawn
+     * currently occupying the given [promotedPiece]'s position.
+     */
+    fun promotePawn(promotedPiece: Piece) {
+        currentBoard = currentBoard.promote(promotedPiece)
     }
 }

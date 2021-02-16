@@ -1,21 +1,24 @@
-package ui.view
+package ui.views
 
 import board.*
 import game.*
 import javafx.geometry.HPos
 import javafx.scene.control.Label
-import javafx.scene.image.Image
-import javafx.scene.image.ImageView
 import javafx.scene.layout.GridPane
 import javafx.scene.layout.Pane
 import javafx.scene.paint.Color
 import javafx.scene.shape.Rectangle
+import javafx.stage.StageStyle
+import piece.Pawn
 import piece.Piece
+import piece.icon
 import tornadofx.*
-import ui.controller.BoardController
-import ui.controller.ViewUpdate
-import ui.controller.ViewUpdate.*
-import ui.controller.ViewUpdate.Nothing
+import ui.controllers.BoardController
+import ui.controllers.ViewUpdate
+import ui.controllers.ViewUpdate.*
+import ui.controllers.ViewUpdate.Nothing
+import ui.dialogs.EndgameDialog
+import ui.dialogs.PromotionDialog
 
 /**
  * Main view representing the chess board UI.
@@ -25,7 +28,7 @@ import ui.controller.ViewUpdate.Nothing
 class BoardView : View() {
 
     /**
-     * Reference to controller in which mouse clicks are processed.
+     * Reference to controller in which the mouse events are handled
      */
     private val controller: BoardController by inject()
 
@@ -71,38 +74,21 @@ class BoardView : View() {
         add(boardPieces[position])
 
         onLeftClick {
-            val update: ViewUpdate = controller.onSquareClicked(position)
-            updateView(update)
+            controller.onSquareClicked(position)
         }
     }
 
-    /**
-     * Wipes any current game state and runs a new game starting in given [gameState].
-     * If no [gameState] is provided, a fresh game is started with pieces in their
-     * initial positions and white player on turn.
-     */
-    fun startGame(gameState: Board = Board.INITIAL) {
-        val update: ViewUpdate = controller.startGame(gameState)
-        updateView(update)
-    }
-
-    /**
-     * Undoes the last played move
-     */
-    fun undoLastMove() {
-        val update: ViewUpdate = controller.undoLastMove()
-        updateView(update)
-    }
 
     /**
      * Updates the view according to given [update]
      */
-    private fun updateView(update: ViewUpdate) {
+    fun updateView(update: ViewUpdate) {
         when (update) {
             is Nothing -> Unit
             is BoardChanged -> {
-                redrawBoard(update.board)
                 checkGameOver(update.board)
+                redrawBoard(update.board)
+                checkForPromotion(update.board)
             }
             is PieceSelected -> renderSelectedPiece(
                 update.piece,
@@ -110,6 +96,15 @@ class BoardView : View() {
                 update.checkedKing
             )
         }
+    }
+
+    private fun checkForPromotion(board: Board) {
+        // TODO possibly move to controller?
+        board.getPiecesFor(board.playerOnTurn.theOtherPlayer, Pawn::class)
+            .firstOrNull { it.position.row == 0 || it.position.row == 7 }
+            ?.let {
+                find<PromotionDialog>(PromotionDialog::pawnToPromote to it).openModal(StageStyle.UNDECORATED)
+            }
     }
 
     /**
@@ -163,9 +158,3 @@ class BoardView : View() {
     }
 
 }
-
-/**
- * Image (icon) of the piece
- */
-private val Piece.icon: ImageView
-    get() = ImageView(Image("/pieces/${name}.png", 40.0, 40.0, true, true))

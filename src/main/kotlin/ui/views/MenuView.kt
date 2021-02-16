@@ -1,10 +1,8 @@
-package ui.view
+package ui.views
 
 import javafx.application.Platform
 import tornadofx.*
-import ui.controller.BoardController
-import kotlin.properties.Delegates
-import kotlin.properties.ObservableProperty
+import ui.controllers.BoardController
 
 /**
  * Menu view
@@ -13,12 +11,15 @@ import kotlin.properties.ObservableProperty
  */
 class MenuView : View() {
 
-    private val view: BoardView by inject()
+    /**
+     * Reference to the board controller in which the menu actions are handled
+     */
+    private val boardController: BoardController by inject()
 
     override val root =  menubar {
         menu("Play") {
             item("New game").action {
-                view.startGame()
+                boardController.startGame()
             }
             item("Load game").action {
                 // TODO
@@ -30,7 +31,7 @@ class MenuView : View() {
             }
             item("Undo last move") {
                 action {
-                    view.undoLastMove()
+                    boardController.undoLastMove()
                 }
             }
             item("Quit").action {
