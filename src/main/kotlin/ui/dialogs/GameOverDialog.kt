@@ -10,17 +10,20 @@ import tornadofx.*
 import ui.controllers.BoardController
 
 /**
- * The endgame dialog that pops up when the game ends
+ * Dialog window that pops up when the game ends
  *
  * @author Dominik Hoftych
  */
-class EndgameDialog : Fragment("Game over") {
+class GameOverDialog : Fragment("Game over") {
 
     /**
      * The result of the game
      */
     val result: GameResult by param()
 
+    /**
+     * Reference to board controller in which the button actions are handled
+     */
     private val boardController: BoardController by inject()
 
     override val root: Parent = gridpane {
