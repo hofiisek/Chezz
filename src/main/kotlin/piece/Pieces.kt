@@ -3,6 +3,8 @@ package piece
 import board.Board
 import board.Position
 import game.*
+import javafx.scene.image.Image
+import javafx.scene.image.ImageView
 
 /**
  * Abstract parent of all chess pieces, i.e. pawn, rook, bishop, knight, queen and king.
@@ -69,6 +71,12 @@ sealed class Piece {
         MoveGenerator.generate(this, board, validateForCheck)
 
 }
+
+/**
+ * Image (icon) of the piece
+ */
+val Piece.icon: ImageView
+    get() = ImageView(Image("/pieces/${name}.png", 50.0, 50.0, true, true))
 
 /**
  * Moves with the piece to the square in given [position].
@@ -192,7 +200,7 @@ data class King(
 
 /**
  * The unicode symbol of the piece, or throws exception of the receiver piece is null
- * // TODO move somewhere else?
+ * // TODO move to saver/loader once implemented
  */
 val Piece?.unicode: String
     get() = when(this) {

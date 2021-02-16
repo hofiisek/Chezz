@@ -1,6 +1,5 @@
 package board
 
-
 /**
  * Specific position on the chess board.
  *

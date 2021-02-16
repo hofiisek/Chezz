@@ -16,27 +16,16 @@ data class Square(val position: Position, val piece: Piece? = null) {
     val an: String = "${position.file}${position.rank}"
 
     /**
-     * Whether the square is occupied by some piece
-     */
-    val isOccupied: Boolean
-        get() = piece != null
-
-    /**
      * Whether the square is unoccupied
      */
     val isUnoccupied: Boolean
-        get() = !isOccupied
+        get() = piece == null
 
     init {
         require(position.onBoard) {
             "Square out of bounds"
         }
     }
-
-    /**
-     * Initializes a new square occupied by given [piece] on the same position as the given [other] square
-     */
-    constructor(other: Square, piece: Piece?) : this(other.position, piece)
 
 }
 
