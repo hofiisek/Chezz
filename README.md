@@ -6,7 +6,7 @@ Implementation of a full-featured chess game, written purely in Kotlin, with a s
 - check, checkmate, stalemate
 - undo last move
   
-### yet-to-be-implemented features
-- exporting (saving) games to the standardized Portable Game Notation (PGN) format - YET TO BE IMPLEMENTED
-- importing (loading) games in the PGN format - YET TO BE IMPLEMENTED
+### Yet-to-be-implemented features
+- exporting (saving) games to the standardized Portable Game Notation (PGN) format
+- importing (loading) games in the PGN format
 - minimax and/or alpha-beta prunning AI
