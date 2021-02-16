@@ -1,4 +1,4 @@
-package ui.views
+package ui.dialogs
 
 import game.GameResult
 import javafx.application.Platform
@@ -7,24 +7,30 @@ import javafx.scene.Parent
 import javafx.scene.layout.Pane
 import javafx.scene.text.FontWeight
 import tornadofx.*
+import ui.controllers.BoardController
 
 /**
- * The endgame dialog that pops up when the game ends.
+ * The endgame dialog that pops up when the game ends
  *
  * @author Dominik Hoftych
  */
-class EndgameDialog : Fragment() {
+class EndgameDialog : Fragment("Game over") {
 
     /**
      * The result of the game
      */
     val result: GameResult by param()
 
+    private val boardController: BoardController by inject()
+
     override val root: Parent = gridpane {
         row { resultText(this) }
         row { buttons(this) }
     }
 
+    /**
+     * Displays text with the result of the game in the given [pane]
+     */
     private fun resultText(pane: Pane) {
         pane.label(
             """
@@ -45,10 +51,13 @@ class EndgameDialog : Fragment() {
         }
     }
 
+    /**
+     * Adds "menu" buttons to the given [pane]
+     */
     private fun buttons(pane: Pane) {
         pane.hbox {
             button("Play another one").action {
-                find(BoardView::class).startGame()
+                boardController.startGame()
                 close()
             }
             button("Save game").action {
