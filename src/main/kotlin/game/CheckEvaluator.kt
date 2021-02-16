@@ -12,11 +12,11 @@ import piece.Piece
 fun Position.isInCheck(board: Board): Boolean {
     val enemyPieces: List<Piece> = board.getPiecesFor(board.playerOnTurn.theOtherPlayer)
     return enemyPieces
-        .map { it.getAllowedMoves(board = board, validateForCheck = false) }
-        .flatten()
+        .flatMap { it.getAllowedMoves(board = board, validateForCheck = false) }
         .mapNotNull {
-            // we are only concerned about basic moves, because kings can't be captured en passant,
+            // we are only concerned about basic moves, because kings can't be captured en passant ,
             // and castling can't capture at all
+            // TODO think about this
             when (it) {
                 is BasicMove -> it.to
                 else -> null
@@ -52,6 +52,7 @@ fun Board.isNotCheck(): Boolean = !isCheck()
  */
 fun Board.isCheckmate(): Boolean {
     val king = getKing()
+    // TODO check whether some other piece can't capture the checking piece
     return isCheck() && king.getAllowedMoves(this).isEmpty()
 }
 
