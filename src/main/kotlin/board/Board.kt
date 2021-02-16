@@ -106,14 +106,6 @@ class Board {
     }
 
     /**
-     * Returns the [Square] currently occupied by the given [piece]
-     */
-    fun getSquareFor(piece: Piece): Square {
-        return getSquare(piece.position)
-    }
-
-
-    /**
      * Returns all pieces of given [player] and [type]
      */
     fun <T: Piece> getPiecesFor(player: Player, type: KClass<T>): List<T> {
@@ -164,3 +156,16 @@ fun Board.playMove(move: Move, takeTurns: Boolean = true) = Board(
  * the players do not take turns.
  */
 fun Board.simulateMove(move: Move) = playMove(move = move, takeTurns = false)
+
+/**
+ * Promotes the pawn to the [promotedPiece]. The pawn being promoted is the pawn
+ * currently occupying the given [promotedPiece]'s position.
+ */
+fun Board.promote(promotedPiece: Piece) = Board(
+    previousBoard = this,
+    updatedSquaresByPosition = mapOf(
+        promotedPiece.position to Square(promotedPiece.position, promotedPiece)
+    ),
+    takeTurns = false,
+    playedMoves = playedMoves
+)
