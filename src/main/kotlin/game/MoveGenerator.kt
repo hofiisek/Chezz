@@ -1,7 +1,6 @@
 package game
 
 import board.*
-import game.MoveGenerator.moveLeftBy
 import piece.*
 import kotlin.math.abs
 
@@ -14,8 +13,6 @@ import kotlin.math.abs
  * Castling moves are generated for the king, because king's final destination after castling (file 'g' or 'c')
  * is non-reachable from his original position otherwise (in case of the rook, it would interfere with its other moves)
  *
- * // TODO implement promotion
- *
  * @author Dominik Hoftych
  */
 object MoveGenerator {
@@ -27,7 +24,7 @@ object MoveGenerator {
      */
     fun generate(piece: Piece, board: Board, validateForCheck: Boolean = true): Set<Move> = when(piece) {
         is Pawn -> pawnMoves(piece, board).plus(enPassant(piece, board))
-        is King -> generateMoves(board, piece, 1).plus(castling(piece, board))
+        is King -> generateMoves(board, piece, 1).plus(castling(piece, board, validateForCheck))
         is Knight -> generateMoves(board, piece, 1)
         is Rook -> generateMoves(board, piece, 7)
         is Bishop -> generateMoves(board, piece, 7)
@@ -45,12 +42,12 @@ object MoveGenerator {
 
         // basic move forward by 1 square
         val forwardPos = pawn.forward()
-        if (board.getSquare(forwardPos).isUnoccupied) {
+        if (board.getSquareOrNull(forwardPos)?.isUnoccupied == true) {
             moves.add(BasicMove(pawn, forwardPos))
 
             // move forward by 2 squares, if it is the first move and the skipping square is free
             val forwardPosByTwo = pawn.forward(2)
-            if (!pawn.hasMoved && board.getSquare(forwardPosByTwo).isUnoccupied) {
+            if (!pawn.hasMoved && board.getSquareOrNull(forwardPosByTwo)?.isUnoccupied == true) {
                 moves.add(BasicMove(pawn, forwardPosByTwo))
             }
         }
@@ -69,9 +66,45 @@ object MoveGenerator {
     }
 
     /**
+     * Returns a set of en passant moves for given [pawn], or an empty set if no en passant
+     * moves are available considering the given [board] state.
+     */
+    private fun enPassant(pawn: Pawn, board: Board): Set<Move> {
+        val enemyPawns: List<Pawn> = board.getPiecesFor(pawn.theOtherPlayer, Pawn::class)
+        return enemyPawns
+            .filter { enemyPawn ->
+                if (!enemyPawn.advancedTwoSquares()) return@filter false
+
+                val (row, col) = pawn.position
+                val (enemyRow, enemyCol) = enemyPawn.position
+                if (row != enemyRow || abs(col - enemyCol) != 1) return@filter false
+
+                val enemyPawnPrevPosition = enemyPawn.backward(2)
+                board.previousBoard?.getSquare(enemyPawnPrevPosition)?.piece is Pawn
+            }
+            .map { enemyPawn -> EnPassantMove(pawn, enemyPawn.backward(), enemyPawn) }
+            .toSet()
+    }
+
+    /**
+     * Returns true if the pawn advanced two squares right in his previous move
+     */
+    private fun Pawn.advancedTwoSquares(): Boolean = when {
+        history.size != 1 -> false
+        player == Player.BLACK && position.row != 3 -> false
+        player == Player.WHITE && position.row != 4 -> false
+        else -> true
+    }
+
+    /**
      * Returns the position of the pawn if it moves forward by [n]
      */
     private fun Pawn.forward(n: Int = 1): Position = this.position add (Direction(rowDirection, 0) times n)
+
+    /**
+     * Returns the position of the pawn if it moves backwards by [n]
+     */
+    private fun Pawn.backward(n: Int = 1): Position = this.position sub (Direction(rowDirection, 0) times n)
 
     /**
      * Returns the position of the pawn if it moves forward left
@@ -84,65 +117,31 @@ object MoveGenerator {
     private fun Pawn.forwardRight(): Position = this.position add Direction(rowDirection, +1)
 
     /**
-     * Returns a set of en passant moves for given [pawn], or an empty set if no en passant
-     * moves are available considering the given [board] state.
-     */
-    private fun enPassant(pawn: Piece, board: Board): Set<Move> {
-        val enemyPawns: List<Pawn> = board.getPiecesFor(pawn.theOtherPlayer, Pawn::class)
-
-        val moves: MutableSet<Move> = mutableSetOf()
-
-        for (enemyPawn in enemyPawns) {
-            val skippedPosition: Position = enemyPawn.advancedTwoSquares() ?: continue
-
-            val (row, col) = pawn.position
-            val (enemyRow, enemyCol) = enemyPawn.position
-            if (row != enemyRow || abs(col - enemyCol) != 1) continue
-
-            val lastPlayedMove = board.playedMoves.last().takeIf { it is BasicMove } ?: continue
-//            if ((lastPlayedMove as BasicMove).piece is Pawn)
-            
-            // TODO check that this is done the very next move after enemy pawn's two-step advance
-            moves.add(EnPassantMove(pawn, skippedPosition, enemyPawn))
-        }
-
-        return moves
-    }
-
-    /**
-     * Helper function evaluating the possibility of en passant moves.
-     *
-     * If the pawn advanced two squares as his last move, the returned position
-     * is the position of the square that was skipped during the two-square move,
-     * otherwise it's null.
-     */
-    private fun Pawn.advancedTwoSquares(): Position? = when {
-        history.size != 1 -> null
-        player == Player.BLACK && position.row != 3 -> null
-        player == Player.WHITE && position.row != 4 -> null
-        else -> position sub Direction(rowDirection, 0)
-    }
-
-    /**
      * Returns a set of castling moves for given [king], or an empty set if castling is not possible
      * considering the given [board] state.
      */
-    private fun castling(king: Piece, board: Board): Set<Move> {
+    private fun castling(king: Piece, board: Board, validateForCheck: Boolean): Set<Move> {
+        // avoid infinite recursion when determining whether some position or the king is in check
+        if (!validateForCheck) return emptySet()
+
         val rooks: List<Rook> = board.getPiecesFor(king.player, Rook::class)
                 .filterNot { it.hasMoved }
 
-        if (rooks.isEmpty() || king.hasMoved) return emptySet()
+        if (rooks.isEmpty() || king.hasMoved || king.isInCheck(board)) return emptySet()
 
-        // TODO check that squares crossed by king are not under attack
         return rooks
-            .filter { rook -> squaresBetween(rook.position, king.position, board).none { it.piece != null } }
-//            .filter { rook ->
-//                val queenSide: Boolean = abs(rook.position.col - king.position.col) == 4
-//                val kingDestination: Position = if (queenSide) king moveLeftBy 2 else king moveRightBy 2
-//                squaresBetween(king.position, kingDestination, board).none {
-//                    it.isInCheck(board)
-//                }
-//            }
+            .filter { rook ->
+                // there must be no pieces between the castling pieces
+                squaresBetween(rook.position, king.position, board).none { it.piece != null }
+            }
+            .filter { rook ->
+                // squares crossed by king must not be in check
+                val queenSide: Boolean = abs(rook.position.col - king.position.col) == 4
+                val kingDestination: Position = if (queenSide) king moveLeftBy 2 else king moveRightBy 2
+                squaresBetween(king.position, kingDestination, board).none {
+                    it.isInCheck(board)
+                }
+            }
             .map { rook ->
                 val queenSide: Boolean = abs(rook.position.col - king.position.col) == 4
                 CastlingMove(

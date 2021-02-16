@@ -1,6 +1,5 @@
 package game
 
-import board.Board
 import board.Position
 import board.Square
 import piece.Piece
@@ -9,7 +8,7 @@ import piece.moveTo
 /**
  * Abstract parent of a single move with a piece, which can be either a basic move,
  * en passant move, or castling move.
- * // TODO does move need to have TO as square, isnt position enough?
+ *
  * @author Dominik Hoftych
  */
 sealed class Move {
@@ -43,8 +42,9 @@ data class EnPassantMove(val pawn: Piece, val to: Position, val capturedPawn: Pi
     override val an: String = "${pawn.position.file}x${to.an} e.p."
 }
 
+
 /**
- * Performs the move on given [board] and returns the list of squares affected
+ * Performs the move on the given [board] and returns the list of squares affected
  */
 fun Move.perform(): List<Square> = when (this) {
     is BasicMove -> {
