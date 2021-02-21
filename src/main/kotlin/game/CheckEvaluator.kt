@@ -11,17 +11,10 @@ import piece.Piece
  */
 fun Position.isInCheck(board: Board): Boolean {
     val enemyPieces: List<Piece> = board.getPiecesFor(board.playerOnTurn.theOtherPlayer)
-    return enemyPieces
+    return this in enemyPieces
         .flatMap { it.getAllowedMoves(board = board, validateForCheck = false) }
-        .mapNotNull {
-            // we are only concerned about basic moves, because kings can't be captured en passant ,
-            // and castling can't capture at all
-            // TODO think about this
-            when (it) {
-                is BasicMove -> it.to
-                else -> null
-            }
-        }.contains(this)
+        .filterIsInstance<BasicMove>()
+        .map { it.to }
 }
 
 /**
@@ -37,31 +30,22 @@ fun Piece.isInCheck(board: Board) = position.isInCheck(board)
 /**
  * Returns true if the king of the player on turn is in check
  */
-fun Board.isCheck(): Boolean {
-    val king = getKing()
-    return king.position.isInCheck(this)
-}
+fun Board.isCheck() = getKing().position.isInCheck(this)
 
 /**
  * Returns true if the king of the player on turn is not in check
  */
-fun Board.isNotCheck(): Boolean = !isCheck()
+fun Board.isNotCheck() = !isCheck()
 
 /**
  * Returns true if the king of the player on turn has been checkmated
  */
-fun Board.isCheckmate(): Boolean {
-    val king = getKing()
-    // TODO check whether some other piece can't capture the checking piece
-    return isCheck() && king.getAllowedMoves(this).isEmpty()
-}
+fun Board.isCheckmate() = isCheck() && getPiecesFor(playerOnTurn).all { it.getAllowedMoves(this).isEmpty() }
 
 /**
  * Returns true if the stalemate occurred
  */
-fun Board.isStalemate(): Boolean {
-    return !isCheck() && getPiecesFor(playerOnTurn).all { it.getAllowedMoves(this).isEmpty() }
-}
+fun Board.isStalemate() = !isCheck() && getPiecesFor(playerOnTurn).all { it.getAllowedMoves(this).isEmpty() }
 
 /**
  * Returns the king of the player on turn
