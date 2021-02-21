@@ -23,7 +23,9 @@ import kotlin.properties.Delegates.observable
  */
 class BoardController : Controller() {
 
-
+    /**
+     * Reference to the board view where stuff is rendered
+     */
     private val boardView: BoardView by inject()
 
     /**
@@ -111,7 +113,7 @@ class BoardController : Controller() {
      * We need to observe the promotion to know the piece the player chose to
      * promote its pawn to.
      * To achieve this, we can use some TornadoFX hacks: if we open the [PromotionDialog]
-     * in a particular [Scope] and provide it with a [model][ItemViewModel] implementation,
+     * in a particular [Scope] and provide it with an [ItemViewModel] implementation,
      * we are able to retrieve whatever gets changed and committed to the model, in that scope.
      */
     private fun observePromotedPiece(move: BasicMove): Piece {
@@ -151,7 +153,6 @@ class BoardController : Controller() {
         currentBoard = gameState
     }
 
-
     /**
      * Undoes the last move, or does nothing if the game hasn't started yet
      */
@@ -164,7 +165,5 @@ class BoardController : Controller() {
     /**
      * TODO
      */
-    fun exportToPgn() {
-        PgnExporter.exportToPgn(currentBoard)
-    }
+    fun exportToPgn() { }
 }
