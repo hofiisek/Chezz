@@ -2,12 +2,19 @@ package ui.controllers
 
 import board.*
 import game.*
-import piece.Pawn
-import piece.Piece
+import game.GameResult.Checkmate
+import game.GameResult.Stalemate
+import io.PgnExporter
+import piece.*
 import tornadofx.Controller
+import tornadofx.Scope
+import tornadofx.ItemViewModel
 import ui.controllers.ViewUpdate.*
+import ui.dialogs.PromotionPieceModel
+import ui.dialogs.PromotionDialog
 import ui.views.BoardView
 import kotlin.properties.Delegates.observable
+
 
 /**
  * Main controller of the chess board UI.
@@ -15,6 +22,7 @@ import kotlin.properties.Delegates.observable
  * @author Dominik Hoftych
  */
 class BoardController : Controller() {
+
 
     private val boardView: BoardView by inject()
 
@@ -24,10 +32,9 @@ class BoardController : Controller() {
      * and checks whether the game hasn't ended yet
      */
     private var currentBoard: Board by observable(initialValue = Board.EMPTY) { _, _, newBoard ->
-        resetSelection()
         boardView.updateView(BoardChanged(newBoard))
-        checkForPromotion()
         checkGameOver()
+        resetSelection()
     }
 
     /**
@@ -53,13 +60,16 @@ class BoardController : Controller() {
         if (selectedPiece == null) {
             if (clickedSquare.piece != null) selectPiece(clickedSquare.piece)
         } else {
-            moveOrReselect(clickedSquare)
+            if (clickedSquare occupiedBySamePlayerAs selectedPiece!!) {
+                selectPiece(clickedSquare.piece!!)
+            } else {
+                tryMoveTo(clickedSquare)
+            }
         }
     }
 
     /**
-     * Selects given [piece] and returns a [ViewUpdate] with the selected piece,
-     * its allowed moves, and the king in check, if there is any
+     * Selects given [piece] and updates the view accordingly
      */
     private fun selectPiece(piece: Piece) {
         if (piece.player != currentBoard.playerOnTurn) return
@@ -68,6 +78,7 @@ class BoardController : Controller() {
         allowedMovesBySquare = piece.getAllowedMoves(currentBoard).associateBy {
             when (it) {
                 is BasicMove -> currentBoard.getSquare(it.to)
+                is PromotionMove -> currentBoard.getSquare(it.basicMove.to)
                 is EnPassantMove -> currentBoard.getSquare(it.to)
                 is CastlingMove -> currentBoard.getSquare(it.king.second)
             }
@@ -82,18 +93,35 @@ class BoardController : Controller() {
 
     /**
      * Based on the [clickedSquare] either
-     * - moves with the selected piece if the [clickedSquare] is occupied by the other player (assuming the move
-     * won't put the king in check)
-     * - selects the piece occupying the [clickedSquare] if it's of the same color
-     * - does nothing if the [clickedSquare] is not in the set of allowed moves
+     * - moves with the selected piece to the [clickedSquare] if it's unoccupied
+     * - captures the opponent's piece currently occupying the [clickedSquare]
+     * - does nothing if a move to the [clickedSquare] is not possible
      */
-    private fun moveOrReselect(clickedSquare: Square) {
-        when {
-            clickedSquare occupiedBySamePlayerAs selectedPiece!! -> selectPiece(clickedSquare.piece!!)
-            clickedSquare in allowedMovesBySquare -> {
-                currentBoard = currentBoard.playMove(allowedMovesBySquare.getValue(clickedSquare))
-            }
+    private fun tryMoveTo(clickedSquare: Square) {
+        val move: Move = allowedMovesBySquare[clickedSquare] ?: return
+
+        currentBoard = if (move is BasicMove && move.isPromotionMove) {
+            currentBoard.playMove(PromotionMove(move, observePromotedPiece(move)))
+        } else {
+            currentBoard.playMove(move)
         }
+    }
+
+    /**
+     * We need to observe the promotion to know the piece the player chose to
+     * promote its pawn to.
+     * To achieve this, we can use some TornadoFX hacks: if we open the [PromotionDialog]
+     * in a particular [Scope] and provide it with a [model][ItemViewModel] implementation,
+     * we are able to retrieve whatever gets changed and committed to the model, in that scope.
+     */
+    private fun observePromotedPiece(move: BasicMove): Piece {
+        val (pawn, destination) = move
+
+        val model = PromotionPieceModel()
+        val scope = Scope(model)
+        boardView.openPromotionWindow(scope, pawn moveTo destination)
+
+        return model.pieceType.value
     }
 
     /**
@@ -101,20 +129,9 @@ class BoardController : Controller() {
      */
     private fun checkGameOver() {
         when {
-            currentBoard.isCheckmate() -> boardView.endTheGame(GameResult.Checkmate(currentBoard.playerOnTurn.theOtherPlayer))
-            currentBoard.isStalemate() -> boardView.endTheGame(GameResult.Stalemate)
+            currentBoard.isCheckmate() -> boardView.openGameOverWindow(Checkmate(currentBoard.playerOnTurn.theOtherPlayer))
+            currentBoard.isStalemate() -> boardView.openGameOverWindow(Stalemate)
         }
-    }
-
-    /**
-     * Checks whether some pawn needs to be promotion and call board view if necessary
-     */
-    private fun checkForPromotion() {
-        currentBoard.getPiecesFor(currentBoard.playerOnTurn.theOtherPlayer, Pawn::class)
-            .firstOrNull { it.position.row == 0 || it.position.row == 7 }
-            ?.let {
-                boardView.promotePawn(it)
-            }
     }
 
     /**
@@ -145,10 +162,9 @@ class BoardController : Controller() {
     }
 
     /**
-     * Promotes the pawn to the [promotedPiece]. The pawn being promoted is the pawn
-     * currently occupying the given [promotedPiece]'s position.
+     * TODO
      */
-    fun promotePawn(promotedPiece: Piece) {
-        currentBoard = currentBoard.promote(promotedPiece)
+    fun exportToPgn() {
+        PgnExporter.exportToPgn(currentBoard)
     }
 }

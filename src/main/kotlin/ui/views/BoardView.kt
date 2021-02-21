@@ -5,11 +5,9 @@ import game.*
 import javafx.geometry.HPos
 import javafx.scene.control.Label
 import javafx.scene.layout.GridPane
-import javafx.scene.layout.Pane
 import javafx.scene.paint.Color
 import javafx.scene.shape.Rectangle
 import javafx.stage.StageStyle
-import piece.Pawn
 import piece.Piece
 import piece.icon
 import tornadofx.*
@@ -137,15 +135,16 @@ class BoardView : View() {
     /**
      * Ends the game by popping up a window showing given game [result]
      */
-    fun endTheGame(result: GameResult) {
+    fun openGameOverWindow(result: GameResult) {
         find<GameOverDialog>(GameOverDialog::result to result).openModal()
     }
 
     /**
-     * Shows the promotion window
+     * Opens the promotion window to select the promotion piece for given [pawn]
      */
-    fun promotePawn(pawn: Pawn) {
-        find<PromotionDialog>(PromotionDialog::pawnToPromote to pawn).openModal(StageStyle.UNDECORATED)
+    fun openPromotionWindow(scope: Scope, pawn: Piece) {
+        find<PromotionDialog>(scope, PromotionDialog::pawnToPromote to pawn)
+            .openModal(stageStyle = StageStyle.UNDECORATED, block = true, escapeClosesWindow = false)
     }
 
 }

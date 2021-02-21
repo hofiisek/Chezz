@@ -1,5 +1,6 @@
 package ui.dialogs
 
+import javafx.beans.property.SimpleObjectProperty
 import javafx.geometry.HPos
 import javafx.scene.Parent
 import javafx.scene.control.Label
@@ -9,7 +10,21 @@ import javafx.scene.paint.Color
 import javafx.scene.shape.Rectangle
 import piece.*
 import tornadofx.*
-import ui.controllers.BoardController
+import ui.dialogs.PromotionDialog.PieceType.*
+
+/**
+ * TornadoFX hacks
+ * see https://edvin.gitbooks.io/tornadofx-guide/content/part1/11_Editing_Models_and_Validation.html
+ */
+class PromotionPiece {
+    val pieceProperty = SimpleObjectProperty<Piece>()
+    var piece: Piece by pieceProperty
+}
+
+class PromotionPieceModel : ItemViewModel<PromotionPiece>() {
+    val pieceType = bind(PromotionPiece::pieceProperty)
+}
+
 
 /**
  * The promotion dialog that pops up when a pawn reaches the other end of the board
@@ -19,73 +34,69 @@ import ui.controllers.BoardController
  */
 class PromotionDialog : Fragment("Promotion") {
 
+    private val model: PromotionPieceModel by inject()
+
     /**
      * The pawn being promoted
      */
-    val pawnToPromote: Pawn by param()
-
-    /**
-     * Reference to the board controller which handles the promotion
-     */
-    private val boardController: BoardController by inject()
+    val pawnToPromote: Piece by param()
 
     override val root: Parent = gridpane {
         row {
-            PromotionPieceType.values().forEach { pieceType -> add(choice(pieceType)) }
+            values().forEach { pieceType -> add(choice(pieceType)) }
         }
     }
 
     /**
-     * Returns a clickable square pane that selects the piece
-     * to which the pawn is promoted based on given [pieceType].
+     * Returns a clickable square pane that, when clicked, will promote the [pawnToPromote]
+     * to a piece of the given [pieceType].
      */
-    private fun choice(pieceType: PromotionPieceType): Pane {
-        val promotionPiece: Piece = when (pieceType) {
-            PromotionPieceType.QUEEN -> Queen(pawnToPromote.player, pawnToPromote.position)
-            PromotionPieceType.ROOK -> Rook(pawnToPromote.player, pawnToPromote.position)
-            PromotionPieceType.KNIGHT -> Knight(pawnToPromote.player, pawnToPromote.position)
-            PromotionPieceType.BISHOP -> Bishop(pawnToPromote.player, pawnToPromote.position)
+    private fun choice(pieceType: PieceType): Pane {
+        val promotedPiece: Piece = when (pieceType) {
+            QUEEN -> Queen(pawnToPromote.player, pawnToPromote.position)
+            ROOK -> Rook(pawnToPromote.player, pawnToPromote.position)
+            KNIGHT -> Knight(pawnToPromote.player, pawnToPromote.position)
+            BISHOP -> Bishop(pawnToPromote.player, pawnToPromote.position)
         }
 
         return gridpane {
             val background = background()
             add(background)
-            add(pieceIcon(promotionPiece))
+            add(pieceIcon(promotedPiece))
 
             setOnMouseEntered { background.fill = Color.SADDLEBROWN }
             setOnMouseExited { background.fill = Color.SANDYBROWN }
 
             onLeftClick {
-                boardController.promotePawn(promotionPiece)
+                // save and commit changes and close this dialog
+                model.pieceType.value = promotedPiece
+                model.commit()
                 close()
             }
         }
     }
 
-    /**
-     * Returns a rectangle with sandy brown background
-     */
     private fun background() = Rectangle(0.0, 0.0, 120.0, 120.0).apply {
         arcWidth = 3.0
         arcHeight = 3.0
         fill = Color.SANDYBROWN
     }
 
-    /**
-     * Returns a label with an icon of given [piece]
-     */
     private fun pieceIcon(piece: Piece) = Label().apply {
         graphic = piece.icon
         GridPane.setHalignment(this, HPos.CENTER)
     }
 
+
     /**
      * Types of pieces to which the pawn can be promoted
      */
-    private enum class PromotionPieceType {
+    private enum class PieceType {
         QUEEN,
         ROOK,
         BISHOP,
         KNIGHT
     }
+
 }
+
