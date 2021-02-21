@@ -22,7 +22,7 @@ data class Square(val position: Position, val piece: Piece? = null) {
         get() = piece == null
 
     init {
-        require(position.onBoard) {
+        require(position.isOnBoard) {
             "Square out of bounds"
         }
     }

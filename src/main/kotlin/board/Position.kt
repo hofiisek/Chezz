@@ -25,17 +25,9 @@ data class Position(val row: Int, val col: Int) {
     }
 
     /**
-     * The position expressed in the algebraic notation
-     */
-    val an: String by lazy {
-        "${file}${rank}"
-    }
-
-
-    /**
      * Whether the position is on the board
      */
-    val onBoard: Boolean = row in (0..7) && col in (0..7)
+    val isOnBoard: Boolean = row in (0..7) && col in (0..7)
 }
 
 infix fun Position.add(other: Position) = Position(this.row + other.row, this.col + other.col)
