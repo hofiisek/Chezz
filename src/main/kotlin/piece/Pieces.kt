@@ -37,11 +37,6 @@ sealed class Piece {
     abstract val name: String
 
     /**
-     * Piece expressed in the commonly used algebraic notation
-     */
-    abstract val an: String
-
-    /**
      * Whether the piece has already moved from its original position
      */
     val hasMoved: Boolean
@@ -63,7 +58,7 @@ sealed class Piece {
     /**
      * Returns the set of allowed moves w.r.t. given [board].
      * If [validateForCheck] is false, the resulting list may contain moves that
-     * would put or leave the king in check, which is not allowed in the game.
+     * would put or leave the king in check, which is generally not allowed in the game.
      * However, such moves are still considered check moves,
      * see https://www.fide.com/FIDE/handbook/LawsOfChess.pdf, paragraph 3.1.
      */
@@ -98,7 +93,6 @@ data class Pawn(
 ) : Piece() {
     
     override val name: String = "Pawn_${player.color()}"
-    override val an: String = "P"
 
     /**
      * Direction along rows (either up or down based on pawn's color)
@@ -113,7 +107,6 @@ data class Rook(
 ) : Piece() {
     
     override val name: String = "Rook_${player.color()}"
-    override val an: String = "R"
     override val movement: Set<Direction> = setOf(
             Direction(-1, 0), // up
             Direction(0, 1),  // right
@@ -129,7 +122,6 @@ data class Knight(
 ) : Piece() {
     
     override val name: String = "Knight_${player.color()}"
-    override val an: String = "N"
     override val movement: Set<Direction> = setOf(
             Direction(-2, 1),  // up->right
             Direction(-1, 2),  // right->up
@@ -149,7 +141,6 @@ data class Bishop(
 ) : Piece() {
     
     override val name: String = "Bishop_${player.color()}"
-    override val an: String = "B"
     override val movement: Set<Direction> = setOf(
             Direction(-1,  1), // up-right
             Direction(1,  1),  // down-right
@@ -165,7 +156,6 @@ data class Queen(
 ) : Piece() {
     
     override val name: String = "Queen_${player.color()}"
-    override val an: String = "Q"
     override val movement: Set<Direction> = setOf(
             Direction(-1, 0),  // up
             Direction(-1, 1),  // up-right
@@ -185,7 +175,6 @@ data class King(
 ) : Piece() {
     
     override val name: String = "King_${player.color()}"
-    override val an: String = "K"
     override val movement: Set<Direction> = setOf(
             Direction(-1, 0),  // up
             Direction(-1, 1),  // up-right
@@ -197,18 +186,3 @@ data class King(
             Direction(-1, -1)  // up-left
     )
 }
-
-/**
- * The unicode symbol of the piece, or throws exception of the receiver piece is null
- * // TODO move to saver/loader once implemented
- */
-val Piece?.unicode: String
-    get() = when(this) {
-        is Pawn -> if (player == Player.WHITE) "\u2659" else "\u265F"
-        is Rook -> if (player == Player.WHITE) "\u2656" else "\u265C"
-        is Knight -> if (player == Player.WHITE) "\u2658" else "\u265E"
-        is Bishop -> if (player == Player.WHITE) "\u2657" else "\u265D"
-        is Queen -> if (player == Player.WHITE) "\u2655" else "\u265B"
-        is King -> if (player == Player.WHITE) "\u2654" else "\u265A"
-        else -> throw IllegalArgumentException("Receiver piece is null")
-    }
