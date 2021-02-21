@@ -2,6 +2,7 @@ package game
 
 import board.Position
 import board.Square
+import piece.Pawn
 import piece.Piece
 import piece.moveTo
 
@@ -11,37 +12,35 @@ import piece.moveTo
  *
  * @author Dominik Hoftych
  */
-sealed class Move {
-
-    /**
-     * The move expressed in the algebraic notation
-     */
-    abstract val an: String
-}
+sealed class Move
 
 /**
  * Basic move with the [piece] to the [to] square. May be a capture move if there's an enemy piece.
  */
-data class BasicMove(val piece: Piece, val to: Position, val isCapture: Boolean = false): Move() {
-    override val an: String = "${piece.an}${if (isCapture) "x" else ""}${to.an}"
+data class BasicMove(val piece: Piece, val to: Position, val isCapture: Boolean = false) : Move() {
+
+    /**
+     * Whether this move is a promotion move.
+     */
+    val isPromotionMove: Boolean = piece is Pawn && (to.row == 0 || to.row == 7)
 }
+
+/**
+ * When the moving pawn of a [basicMove] reaches the 0th or
+ */
+data class PromotionMove(val basicMove: BasicMove, val promotedTo: Piece) : Move()
 
 /**
  * The castling move, which is the only move involving two pieces at once - [rook] and [king].
  * When the king moves left, the castling is said to be [queenSide].
  */
-data class CastlingMove(val rook: Pair<Piece, Position>, val king: Pair<Piece, Position>, val queenSide: Boolean) : Move() {
-    override val an: String = "0-0${if (queenSide) "-0" else ""}"
-}
+data class CastlingMove(val rook: Pair<Piece, Position>, val king: Pair<Piece, Position>, val queenSide: Boolean) : Move()
 
 /**
  * The en passant move, during which the moving [pawn] captures the [capturedPawn] but ends up in a different
  * square [to].
  */
-data class EnPassantMove(val pawn: Piece, val to: Position, val capturedPawn: Piece) : Move() {
-    override val an: String = "${pawn.position.file}x${to.an} e.p."
-}
-
+data class EnPassantMove(val pawn: Piece, val to: Position, val capturedPawn: Piece) : Move()
 
 /**
  * Performs the move on the given [board] and returns the list of squares affected
@@ -49,10 +48,17 @@ data class EnPassantMove(val pawn: Piece, val to: Position, val capturedPawn: Pi
 fun Move.perform(): List<Square> = when (this) {
     is BasicMove -> {
         val (piece, destination) = this
-        val origin = piece.position
         listOf(
-            Square(origin, null),
+            Square(piece.position, null),
             Square(destination, piece moveTo destination),
+        )
+    }
+    is PromotionMove -> {
+        val (basicMove, pawnPromotedTo) = this
+        val (pawn, destination) = basicMove
+        listOf(
+            Square(pawn.position, null),
+            Square(destination, pawnPromotedTo),
         )
     }
     is CastlingMove -> {
@@ -67,9 +73,8 @@ fun Move.perform(): List<Square> = when (this) {
     }
     is EnPassantMove -> {
         val (pawn, destination, capturedPawn) = this
-        val origin = pawn.position
         listOf(
-            Square(origin, null),
+            Square(pawn.position, null),
             Square(capturedPawn.position, null),
             Square(destination, pawn moveTo destination)
         )
