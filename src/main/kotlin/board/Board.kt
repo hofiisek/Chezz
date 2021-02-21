@@ -95,14 +95,14 @@ class Board {
      * Returns the [Square] on given [position], or throw exception if given position is not on the board
      */
     fun getSquare(position: Position): Square {
-        return if (position.onBoard) squares[position] else throw IllegalArgumentException("Position not on board")
+        return if (position.isOnBoard) squares[position] else throw IllegalArgumentException("Position not on board")
     }
 
     /**
      * Returns the [Square] on given [position], or null if the given position is not on the board
      */
     fun getSquareOrNull(position: Position): Square? {
-        return if (position.onBoard) squares[position] else null
+        return if (position.isOnBoard) squares[position] else null
     }
 
     /**
@@ -153,19 +153,7 @@ fun Board.playMove(move: Move, takeTurns: Boolean = true) = Board(
 
 /**
  * Simulates the given [move] and returns an updated board. Contrary to the [playMove] method,
- * the players do not take turns.
+ * the players do not take turns - the move is only simulated to obtain the board state if
+ * the move was played
  */
 fun Board.simulateMove(move: Move) = playMove(move = move, takeTurns = false)
-
-/**
- * Promotes the pawn to the [promotedPiece]. The pawn being promoted is the pawn
- * currently occupying the given [promotedPiece]'s position.
- */
-fun Board.promote(promotedPiece: Piece) = Board(
-    previousBoard = this,
-    updatedSquaresByPosition = mapOf(
-        promotedPiece.position to Square(promotedPiece.position, promotedPiece)
-    ),
-    takeTurns = false,
-    playedMoves = playedMoves
-)
