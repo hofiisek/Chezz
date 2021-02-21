@@ -18,25 +18,27 @@ class MenuView : View() {
 
     override val root =  menubar {
         menu("Play") {
-            item("New game").action {
+            item("New game", "Shortcut+N").action {
                 boardController.startGame()
             }
-            item("Load game").action {
+            item("Load game", "Shortcut+L").action {
                 // TODO
+            }
+            item("Quit", "ShortCut+Q").action {
+                Platform.exit()
             }
         }
         menu("State") {
-            item("Save game").action {
-                // TODO
+            item("Save game", "Shortcut+S").action {
+                // TODO show export options - PGN headers form
+                boardController.exportToPgn()
             }
-            item("Undo last move") {
-                action {
-                    boardController.undoLastMove()
-                }
+            item("Undo last move", "Shortcut+Z").action {
+                boardController.undoLastMove()
             }
-            item("Quit").action {
-                Platform.exit()
-            }
+        }
+        menu("Settings") {
+            // TODO - show check, show allowed moves, ..
         }
     }
 
