@@ -38,9 +38,9 @@ val Piece?.an: String
 
 val Move.an: String
     get() = when (this) {
-        //TODO when pawn move is capture, prefix it by the file of departure
-        is BasicMove -> "${piece.an}${if (isCapture) "x" else ""}${to.an}"
+        // TODO add + sigh if the move is check move
+        is BasicMove -> "${piece.an}${if (isCapture && piece is Pawn) piece.position.file else ""}${if (isCapture) "x" else ""}${to.an}"
         is PromotionMove -> "${basicMove.an}=${promotedTo.an}"
-        is CastlingMove -> "0-0${if (queenSide) "-0" else ""}"
-        is EnPassantMove -> "${pawn.position.file}x${to.an} e.p."
+        is CastlingMove -> "O-O${if (queenSide) "-0" else ""}"
+        is EnPassantMove -> "${pawn.position.file}x${to.an}"
     }
