@@ -108,7 +108,7 @@ class Board {
     /**
      * Returns all pieces of given [player] and [type]
      */
-    fun <T: Piece> getPiecesFor(player: Player, type: KClass<T>): List<T> {
+    fun <T: Piece> getPiecesFor(player: Player = playerOnTurn, type: KClass<T>): List<T> {
         return squares
                 .mapNotNull { it.piece }
                 .filter { it.player == player }
@@ -119,7 +119,7 @@ class Board {
     /**
      * Returns all pieces for given [player]
      */
-    fun getPiecesFor(player: Player): List<Piece> {
+    fun getPiecesFor(player: Player = playerOnTurn): List<Piece> {
         return squares
                 .mapNotNull { it.piece }
                 .filter { it.player == player }
