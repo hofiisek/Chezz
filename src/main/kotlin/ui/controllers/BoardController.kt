@@ -5,6 +5,7 @@ import game.*
 import game.GameResult.Checkmate
 import game.GameResult.Stalemate
 import io.PgnExporter
+import io.PgnImporter
 import piece.*
 import tornadofx.Controller
 import tornadofx.Scope
@@ -13,6 +14,7 @@ import ui.controllers.ViewUpdate.*
 import ui.dialogs.PromotionPieceModel
 import ui.dialogs.PromotionDialog
 import ui.views.BoardView
+import java.io.File
 import kotlin.properties.Delegates.observable
 
 
@@ -163,7 +165,16 @@ class BoardController : Controller() {
     }
 
     /**
-     * TODO
+     * Processes given [pgnFile] and initializes the board in the state represented
+     * by the pgn file
      */
-    fun exportToPgn() { }
+    fun importPgn(pgnFile: File) {
+        currentBoard = PgnImporter.importPgn(pgnFile)
+    }
+
+    /**
+     * Processes current board state to a string in pgn format
+     */
+    fun exportPgn(): String = PgnExporter.exportToPgn(currentBoard)
+
 }
