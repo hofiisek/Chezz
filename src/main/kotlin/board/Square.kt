@@ -11,11 +11,6 @@ import piece.Piece
 data class Square(val position: Position, val piece: Piece? = null) {
 
     /**
-     * The square's position expressed in the algebraic notation
-     */
-    val an: String = "${position.file}${position.rank}"
-
-    /**
      * Whether the square is unoccupied
      */
     val isUnoccupied: Boolean

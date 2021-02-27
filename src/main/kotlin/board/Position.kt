@@ -1,10 +1,7 @@
 package board
 
 /**
- * Specific position on the chess board.
- *
- * @param row row index in range from 0 to 7
- * @param col column index in range from 0 to 7
+ * Specific position in the [row] and [col] of the chess board (indexed from 0 to 7).
  *
  * @author Dominik Hoftych
  */

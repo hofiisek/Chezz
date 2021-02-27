@@ -6,6 +6,8 @@ import ui.views.ChezzAppView
 
 /**
  * Application window
+ *
+ * @author Dominik Hoftych
  */
 class ChezzApp : App(ChezzAppView::class) {
 

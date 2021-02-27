@@ -1,6 +1,5 @@
 package ui.views
 
-import io.PgnImporter
 import javafx.application.Platform
 import javafx.stage.FileChooser.ExtensionFilter
 import tornadofx.*

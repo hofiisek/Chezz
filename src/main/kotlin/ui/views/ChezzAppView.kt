@@ -5,6 +5,8 @@ import tornadofx.*
 
 /**
  * Main view of the Chezz application, grouping together other views in a borderpane
+ *
+ * @author Dominik Hoftych
  */
 class ChezzAppView : View("Chezz") {
 
