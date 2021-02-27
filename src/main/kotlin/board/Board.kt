@@ -125,17 +125,40 @@ class Board {
                 .filter { it.player == player }
     }
 
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as Board
+
+        if (squares != other.squares) return false
+        if (playerOnTurn != other.playerOnTurn) return false
+        if (previousBoard != other.previousBoard) return false
+        if (playedMoves != other.playedMoves) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = squares.hashCode()
+        result = 31 * result + playerOnTurn.hashCode()
+        result = 31 * result + (previousBoard?.hashCode() ?: 0)
+        result = 31 * result + playedMoves.hashCode()
+        return result
+    }
+
+
     companion object {
 
         /**
-         * An empty chess board without pieces
+         * Returns a new empty chess board without pieces
          */
-        val EMPTY = Board(setPieces = false)
+        fun emptyBoard() = Board(setPieces = false)
 
         /**
-         * Chess board with pieces in initial positions
+         * Returns a new chess board with pieces in initial positions
          */
-        val INITIAL = Board()
+        fun initialBoard() = Board()
     }
 
 }
