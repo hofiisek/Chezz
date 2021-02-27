@@ -53,7 +53,7 @@ class BoardView : View() {
      */
     override val root = gridpane {
         // empty board at first, is redrawn once the game starts
-        Board.EMPTY.squares.forEachRow { rowSquares ->
+        Board.emptyBoard().squares.forEachRow { rowSquares ->
             row {
                 rowSquares.forEach {
                     add(initSquare(it.position))

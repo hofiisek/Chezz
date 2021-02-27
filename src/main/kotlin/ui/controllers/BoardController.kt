@@ -35,7 +35,7 @@ class BoardController : Controller() {
      * updates the [boardView] according to the new board state, checks for promotion,
      * and checks whether the game hasn't ended yet
      */
-    private var currentBoard: Board by observable(initialValue = Board.EMPTY) { _, _, newBoard ->
+    private var currentBoard: Board by observable(initialValue = Board.emptyBoard()) { _, _, newBoard ->
         boardView.updateView(BoardChanged(newBoard))
         checkGameOver()
         resetSelection()
@@ -151,7 +151,7 @@ class BoardController : Controller() {
      * If no [gameState] is provided, a fresh game is started with pieces in their
      * initial positions and white player on turn.
      */
-    fun startGame(gameState: Board = Board.INITIAL) {
+    fun startGame(gameState: Board = Board.initialBoard()) {
         currentBoard = gameState
     }
 
@@ -159,7 +159,7 @@ class BoardController : Controller() {
      * Undoes the last move, or does nothing if the game hasn't started yet
      */
     fun undoLastMove() {
-        if (currentBoard != Board.EMPTY) {
+        if (currentBoard != Board.emptyBoard()) {
             currentBoard = currentBoard.previousBoard ?: currentBoard
         }
     }
