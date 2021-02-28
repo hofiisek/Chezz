@@ -2,8 +2,6 @@ package ui.controllers
 
 import board.*
 import game.*
-import game.GameResult.Checkmate
-import game.GameResult.Stalemate
 import io.PgnExporter
 import io.PgnImporter
 import piece.*
@@ -129,13 +127,12 @@ class BoardController : Controller() {
     }
 
     /**
-     * Checks whether the game has ended and call board view if necessary
+     * Checks whether the game has ended, and if so, opens up the game-over window,
+     * otherwise does nothing
      */
-    private fun checkGameOver() {
-        when {
-            currentBoard.isCheckmate() -> boardView.openGameOverWindow(Checkmate(currentBoard.playerOnTurn.theOtherPlayer))
-            currentBoard.isStalemate() -> boardView.openGameOverWindow(Stalemate)
-        }
+    private fun checkGameOver() = when (val result = currentBoard.getGameResult()) {
+        GameResult.StillPlaying -> Unit
+        else -> boardView.openGameOverWindow(result)
     }
 
     /**

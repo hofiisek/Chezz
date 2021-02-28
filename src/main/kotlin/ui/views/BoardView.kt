@@ -136,7 +136,7 @@ class BoardView : View() {
      * Ends the game by popping up a window showing given game [result]
      */
     fun openGameOverWindow(result: GameResult) {
-        find<GameOverDialog>(GameOverDialog::result to result).openModal()
+        find<GameOverDialog>(GameOverDialog::gameResult to result).openModal()
     }
 
     /**

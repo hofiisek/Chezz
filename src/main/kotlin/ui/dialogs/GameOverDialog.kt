@@ -1,6 +1,7 @@
 package ui.dialogs
 
 import game.GameResult
+import game.WinType
 import javafx.application.Platform
 import javafx.geometry.Pos
 import javafx.scene.Parent
@@ -19,7 +20,7 @@ class GameOverDialog : Fragment("Game over") {
     /**
      * The result of the game
      */
-    val result: GameResult by param()
+    val gameResult: GameResult by param()
 
     /**
      * Reference to board controller in which the button actions are handled
@@ -35,14 +36,23 @@ class GameOverDialog : Fragment("Game over") {
      * Displays text with the result of the game in the given [pane]
      */
     private fun resultText(pane: Pane) {
+        // to allow smart-cast inside the when expression, we must copy the result to another
+        // variable.. otherwise it complains that smart-cast is impossible due to open/custom
+        // getter, most likely due to the "by param()" delegate
+        val result = gameResult
         pane.label(
             """
-            The game ended, ${when (result) {
-                is GameResult.Checkmate -> "${result.winningPlayer} player wins!"
-                is GameResult.WinOnTime -> "${result.winningPlayer} player wins on time!"
-                is GameResult.FiftyMoveRule -> "as a draw due to the fifty-move rule!"
-                is GameResult.Stalemate -> "as a draw due to stalemate!"
-                is GameResult.ThreefoldRepetition -> "as a draw due to the threefold repetition rule!"
+            The game is over.. ${when (result) {
+                is GameResult.BlackWins -> {
+                    "BLACK player wins ${if (result.type == WinType.CHECKMATE) "by checkmate" else "on time"}!"
+                }
+                is GameResult.WhiteWins -> {
+                    "WHITE player wins ${if (result.type == WinType.CHECKMATE) "by checkmate" else "on time"}!"
+                }
+                is GameResult.Draw -> {
+                    "DRAW due to ${result.type}"
+                }
+                GameResult.StillPlaying -> throw IllegalArgumentException("Result must be known at this point")
             }}
             """.trimIndent()
         ) {
@@ -58,13 +68,15 @@ class GameOverDialog : Fragment("Game over") {
      * Adds "menu" buttons to the given [pane]
      */
     private fun buttons(pane: Pane) {
-        pane.hbox {
+        pane.hbox(spacing = 5) {
             button("Play another one").action {
                 boardController.startGame()
                 close()
             }
             button("Save game").action {
-                "TODO"
+                // TODO move saving/loading to separate component or duplicate code here?
+                println(boardController.exportPgn())
+                close()
             }
             button("Convince yourself").action { close() }
             button("Get life and quit").action { Platform.exit() }
