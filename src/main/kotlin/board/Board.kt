@@ -164,10 +164,16 @@ class Board {
 }
 
 /**
+ * Returns true if the white player is on turn.
+ * Convenience method to avoid the long and ugly equality checks everytime.
+ */
+fun Board.whiteOnTurn(): Boolean = playerOnTurn == Player.WHITE
+
+/**
  * Plays the given [move] and returns an updated board with the move recorded
  * in the list of played moves. If [takeTurns] is true, the players take turn.
  */
-fun Board.playMove(move: Move, takeTurns: Boolean = true) = Board(
+fun Board.playMove(move: Move, takeTurns: Boolean = true): Board = Board(
     previousBoard = this,
     updatedSquaresByPosition = move.perform().associateBy { it.position },
     takeTurns = takeTurns,
@@ -179,4 +185,4 @@ fun Board.playMove(move: Move, takeTurns: Boolean = true) = Board(
  * the players do not take turns - the move is only simulated to obtain the board state if
  * the move was played
  */
-fun Board.simulateMove(move: Move) = playMove(move = move, takeTurns = false)
+fun Board.simulateMove(move: Move): Board = playMove(move = move, takeTurns = false)
