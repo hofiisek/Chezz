@@ -3,6 +3,7 @@ package game
 import board.Board
 import board.Position
 import board.Square
+import board.whiteOnTurn
 import piece.King
 import piece.Piece
 
@@ -51,4 +52,15 @@ fun Board.isStalemate() = !isCheck() && getPiecesFor(playerOnTurn).all { it.getA
  * Returns the king of the player on turn
  */
 fun Board.getKing(): Piece = getPiecesFor(playerOnTurn, King::class).first()
+
+/**
+ * Returns a [GameResult] describing the current board state
+ * TODO verify that this is the right place for this method & how to integrate future WinType.TIMEOUT into this?
+ */
+fun Board.getGameResult(): GameResult = when {
+    isStalemate() -> GameResult.Draw(DrawType.STALEMATE)
+    isCheckmate() && whiteOnTurn() -> GameResult.BlackWins(WinType.CHECKMATE)
+    isCheckmate() && !whiteOnTurn() -> GameResult.WhiteWins(WinType.CHECKMATE)
+    else -> GameResult.StillPlaying
+}
 

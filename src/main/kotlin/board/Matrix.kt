@@ -1,7 +1,7 @@
 package board
 
 /**
- * Initializes a new matrix of [n] rows and [m] cols and initializes each element
+ * Creates a new matrix of [n] rows and [m] cols and initializes each element
  * using the [initializer].
  *
  * Delegates to the [List] interface but provides adjusted iterator
@@ -64,12 +64,12 @@ data class Matrix<T>(
 
 
 /**
- * Extension function allowing to use [Position] as an index to the receiver [Matrix]
+ * Returns the particular [Square] on given [position] of the matrix
  */
 operator fun <T> Matrix<T>.get(position: Position): T = matrix[position.row][position.col]
 
 /**
- * Performs the given [action] on each row of the matrix.
+ * Performs the given [action] on each row of the matrix
  */
 fun <T> Matrix<T>.forEachRow(action: Matrix<T>.(item: List<T>) -> Unit) {
     for (row in matrix) {
@@ -78,7 +78,7 @@ fun <T> Matrix<T>.forEachRow(action: Matrix<T>.(item: List<T>) -> Unit) {
 }
 
 /**
- * Performs the given [action] on each element, providing both row and column index with the element.
+ * Performs the given [action] on each element, providing both row and column index with the element
  */
 fun <T> Matrix<T>.forEachIndexed(action: Matrix<T>.(row: Int, col: Int, item: T) -> Unit) {
     for ((rowIdx, matrixRow) in matrix.withIndex()){
