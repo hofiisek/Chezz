@@ -5,6 +5,7 @@ import board.Square
 import piece.Pawn
 import piece.Piece
 import piece.moveTo
+import ui.dialogs.PromotionDialog
 
 /**
  * Abstract parent of a single move with a piece, which can be either a basic move,
@@ -26,7 +27,13 @@ data class BasicMove(val piece: Piece, val to: Position, val isCapture: Boolean 
 }
 
 /**
- * When the moving pawn of a [basicMove] reaches the 0th or
+ * When the moving pawn of a [basicMove] reaches the first or eighth rank, it needs to be promoted
+ * to a different piece of player's choice.
+ *
+ * The problem is that at the time when the allowed moves are generated, the player's choice
+ * of the piece to promote to is not yet known. Due to that, a promotion move acts as a basic move,
+ * until the player makes his decision in the [PromotionDialog], after which is the basic move
+ * transformed to an instance of this class.
  */
 data class PromotionMove(val basicMove: BasicMove, val promotedTo: Piece) : Move()
 
