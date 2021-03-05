@@ -1,27 +1,58 @@
 package io
 
 import board.Board
-import game.Move
-
-typealias Chunk = List<Move>
-
+import board.playMove
+import board.whiteOnTurn
+import game.*
 
 /**
+ * Exporter to the standard Portable Game Notation (PGN) format.
+ *
  * @author Dominik Hoftych
  */
 object PgnExporter {
 
+    /**
+     * Returns a string with the PGN movetext representing the given [board].
+     */
     fun exportToPgn(board: Board): String {
-        val result = exportPgnRecursive(board.playedMoves.chunked(2).iterator(), 1, "")
-        println(result)
-
-        return result
+        return exportRecursive(Board.initialBoard(), board.playedMoves.iterator(), "")
     }
 
-    private fun exportPgnRecursive(chunks: Iterator<Chunk>, round: Int, content: String): String {
-        if (!chunks.hasNext()) return content
+    /**
+     * Recursively accumulates the given [pgn] string by performing given [moves] one by one
+     * on the current [board]. The current board state needs to be known throughout the
+     * recursion, to be able to resolve situations where multiple pieces of the same type
+     * can move to the same destination, which would cause their standard algebraic
+     * notations to be unambiguous.
+     */
+    private tailrec fun exportRecursive(board: Board, moves: Iterator<Move>, pgn: String): String {
+        if (!moves.hasNext()) {
+            val result = when (board.getGameResult()) {
+                is GameResult.Draw -> "1/2-1/2"
+                is GameResult.WhiteWins -> "1-0"
+                is GameResult.BlackWins -> "0-1"
+                GameResult.StillPlaying -> "*"
+            }
+            return "$pgn $result"
+        }
 
-        val chunk = chunks.next()
-        return exportPgnRecursive(chunks, round + 1, "$content$round. ${chunk.joinToString(separator = " ") { it.an }} ")
+        val move = moves.next()
+        val newBoard = board.playMove(move)
+
+        val roundNumOrEmpty = if (board.whiteOnTurn()) "${newBoard.playedMoves.size / 2 + 1}. " else ""
+        val checkOrCheckmateSignOrEmpty = when {
+            newBoard.isCheckmate() -> "#"
+            newBoard.isCheck() -> "+"
+            else -> ""
+        }
+
+        return exportRecursive(
+            board = newBoard,
+            moves = moves,
+            pgn = "$pgn$roundNumOrEmpty${move.getAlgebraicNotation(board)}$checkOrCheckmateSignOrEmpty "
+        )
     }
+
+
 }

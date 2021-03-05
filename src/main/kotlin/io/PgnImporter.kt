@@ -1,126 +1,152 @@
 package io
 
 import board.Board
-import board.Position
 import board.playMove
 import game.*
 import piece.*
 import java.io.File
 import kotlin.reflect.KClass
 
+/**
+ * Importer of files in the standard Portable Game Notation (PGN) format.
+ *
+ * @author Dominik Hoftych
+ */
 object PgnImporter {
 
     /**
-     * Regex matching the tag pairs of the pgn file
+     * Regex matching the tag pairs
      */
-    private val tagPairsRgx = "\\[(.*?)]".toRegex()
+    private val tagPairsRgx = """\[(.*?)]""".toRegex()
 
     /**
-     * Regex matching bracket comments in the pgn file ({...comment...})
+     * Regex matching bracket comments ({...comment...})
      */
-    private val bracketCommentsRgx = "\\{(.*?)}".toRegex()
+    private val bracketCommentsRgx = """\{(.*?)}""".toRegex()
 
     /**
-     * Regex matching semicolon comments in the pgn file (;...comment until the end of line...)
+     * Regex matching semicolon comments (;...comment until the end of line...)
      */
     private val semicolonCommentsRgx = ";.*".toRegex()
 
     /**
-     * Regex matching the format of a promotion move,
-     * e.g. fxe8=Q (pawn on file "f" to "e8" with capture and promotes to queen"
+     * Regex matching the # and + characters
      */
-    private val promotionMoveRgx = """([a-h]x)?[a-h][1-8]=([QRBN])""".toRegex() // ((([a-h])x)?([a-h][1-8]))=([QRBN])
+    private val checkSignsRgx = """[#+]""".toRegex()
 
     /**
-     * Regex matching the format of a basic move regardless the type of the moving piece,
-     * e.g. e6 (pawn to e6), fxe6 (pawn on file "f" to "e6" with capture),
-     * Ne6 (knight to e6), Nxe6 (knight to e6 with capture), etc.
+     * Regex matching the game result
      */
-    private val castlingMoveRgx = """O-O(-O)?""".toRegex()
+    private val gameResultRgx = """1/2-1/2|1-0|0-1|\*""".toRegex()
 
     /**
-     * Regex matching the format of a castling move,
-     * e.g. O-O for kingside castling, and O-O-O for queenside castling
+     * Regex matching the format of moves of any piece type except for pawn.
+     * e.g. Ne6 (knight to e6), Nxe6 (knight to e6 with capture)
      */
-    private val basicMoveRgx = """([KQNBR|a-h])?(x)?([a-h][1-8])""".toRegex()
+    private val basicMoveRgx = """([KQNBR])[a-h]?[1-8]?x?[a-h][1-8][#|+]?""".toRegex()
 
     /**
-     * Extracts the movetext from given [pgnFile] (discarding tag pairs and comments),
-     * splits it to strings representing individual moves, and reconstructs the
-     * board by applying the moves on it one by one.
+     * Regex matching the format of moves of pawn.
+     * e.g. e6 (pawn to e6), fxe6 (pawn on file f to e6 with capture)
+     */
+    private val pawnMoveRgx = """([a-h]x)?[a-h][1-8][#|+]?""".toRegex()
+
+    /**
+     * Regex matching the format of promotion moves.
+     * e.g. fxg8=Q (pawn on file f to g8 with capture and promotes to queen)
+     */
+    private val promotionMoveRgx = """(([a-h]x)?[a-h][1-8])=([QRBN])[#|+]?""".toRegex()
+
+    /**
+     * Regex matching the format of castling moves.
+     * O-O for kingside castling, and O-O-O for queenside castling
+     */
+    private val castlingMoveRgx = """O-O(-O)?[#|+]?""".toRegex()
+
+    /**
+     * Extracts the movetext from given [pgnFile] discarding tag pairs, comments, and the
+     * game result, splits it to the algebraic notations representing individual moves,
+     * and reconstructs the board by applying the moves on it one by one.
      */
     fun importPgn(pgnFile: File): Board {
+        val movetext: String = pgnFile.inputStream().bufferedReader().use { reader ->
+            reader.readLines()
+                .filterNot { line -> line.matches(tagPairsRgx) }
+                .joinToString(" ") { line ->
+                    // semicolon comment continues to the end of the line,
+                    // we need to remove it before joining
+                    line.replace(semicolonCommentsRgx, "")
+                }
+                .replace(bracketCommentsRgx, "")
+                .replace(checkSignsRgx, "")
+                .replace(gameResultRgx, "")
+        }
 
-        // ignore tag pairs and comments
-        val moveText: String = pgnFile.inputStream().bufferedReader().readLines()
-            .filterNot { it.matches(tagPairsRgx) }
-            .map { it.replace(semicolonCommentsRgx, "") }
-            .joinToString(" ")
-            .replace(bracketCommentsRgx, "")
-
-        val moveList: List<String> = moveText.split("""\d*\.""".toRegex())
+        val moves: List<String> = movetext.split("""\d*\.""".toRegex())
             .flatMap { it.split(" ") }
             .filter { it.isNotBlank() }
 
-        println(moveList)
-
-        return reconstruct(Board.INITIAL, moveList.iterator())
+        return reconstruct(Board.initialBoard(), moves.iterator())
     }
 
-    private fun reconstruct(board: Board, rounds: Iterator<String>): Board {
-        if (!rounds.hasNext()) return board
+    /**
+     * Recursively reconstructs the board by performing the given [moves] one by one
+     * on the given [board], starting with an initial board.
+     */
+    private fun reconstruct(board: Board, moves: Iterator<String>): Board {
+        if (!moves.hasNext()) return board
 
-        val moveAn: String = rounds.next()
+        val moveAn: String = moves.next()
         val move: Move = when {
-            moveAn.contains(promotionMoveRgx) -> constructPromotion(board, promotionMoveRgx.find(moveAn)!!)
-            moveAn.contains(castlingMoveRgx) -> constructCastling(board, castlingMoveRgx.find(moveAn)!!)
-            moveAn.contains(basicMoveRgx) -> constructBasicMove(board, basicMoveRgx.find(moveAn)!!)
+            moveAn.matches(castlingMoveRgx) -> resolveCastlingMove(board, moveAn)
+            moveAn.matches(pawnMoveRgx) -> resolvePawnMove(board, moveAn)
+            moveAn.matches(basicMoveRgx) -> resolveBasicMove(board, basicMoveRgx.find(moveAn)!!)
+            moveAn.matches(promotionMoveRgx) -> resolvePromotionMove(board, promotionMoveRgx.find(moveAn)!!)
             else -> throw IllegalArgumentException("Move $moveAn not recognized")
         }
 
-        println("Move $moveAn  ---> $move")
-
-        return reconstruct(board.playMove(move), rounds)
+        return reconstruct(board.playMove(move), moves)
     }
 
-    private fun constructBasicMove(board: Board, match: MatchResult): BasicMove {
-        val (pieceOrFile, captureSign, destPosStr) = match.destructured.toList()
-        return when {
-            // sanity checks that if piece
-//            pieceOrFile.isBlank() && captureSign.isNotBlank() ->
-//                throw IllegalArgumentException("Basic move ${match.value} has incorrect format")
-//            pieceOrFile.isNotBlank() && captureSign.isBlank() ->
-//                throw IllegalArgumentException("Basic move ${match.value} has incorrect format")
-            pieceOrFile.isBlank() -> {
-                board.getPiecesFor(type = Pawn::class)
-                    .flatMap { it.getAllowedMoves(board) }
-                    .filterIsInstance<BasicMove>()
-                    .filterNot { it.isCapture }
-                    .first { it.to == destPosStr.toPosition() }
-            }
-            pieceOrFile.matches("""[KQNBR]""".toRegex()) -> {
-                board.getPiecesFor(type = resolvePieceClass(pieceOrFile))
-                    .flatMap { it.getAllowedMoves(board) }
-                    .filterIsInstance<BasicMove>()
-                    .filter { if (captureSign.isNotBlank()) it.isCapture else true }
-                    .first { it.to == destPosStr.toPosition() }
-            }
-            pieceOrFile.matches("""[a-h]""".toRegex()) -> {
-                board.getPiecesFor(type = Pawn::class)
-                    .flatMap { it.getAllowedMoves(board) }
-                    .filterIsInstance<BasicMove>()
-                    .filter { it.isCapture }
-                    .filter { it.to == destPosStr.toPosition() }
-                    .first { it.piece.position.file == pieceOrFile.first() }
-            }
-            else -> throw IllegalArgumentException("Basic move ${match.value} has incorrect format")
-        }
+    /**
+     * Returns the only castling move matching given [castlingPgn] string.
+     */
+    private fun resolveCastlingMove(board: Board, castlingPgn: String): CastlingMove {
+        return board.getKing().getAllowedMoves(board)
+            .filterIsInstance<CastlingMove>()
+            .firstOrNull { it.an == castlingPgn }
+            ?: throw IllegalStateException("Castling move $castlingPgn is not possible")
     }
 
-    private fun constructPromotion(board: Board, match: MatchResult): PromotionMove {
-//        val (basicMoveStr, _, _, _, promotedTo) = match.destructured.toList()
-        val (basicMoveStr, promotedTo) = match.destructured.toList()
-        val basicMove: BasicMove = constructBasicMove(board, basicMoveRgx.find(basicMoveStr)!!)
+    /**
+     * Returns the only basic move matching the pgn string stored in given [match] result.
+     */
+    private fun resolveBasicMove(board: Board, match: MatchResult): BasicMove {
+        val (basicMoveStr, pieceLetter) = match.groupValues
+
+        return board.getPiecesFor(type = pieceLetter.pieceClass())
+            .flatMap { it.getAllowedMoves(board) }
+            .filterIsInstance<BasicMove>()
+            .firstOrNull { it.getAlgebraicNotation(board) == basicMoveStr }
+            ?: throw IllegalStateException("Move $basicMoveStr not possible on current board")
+    }
+
+    /**
+     * Returns the only pawn move matching given [pawnMovePgn].
+     */
+    private fun resolvePawnMove(board: Board, pawnMovePgn: String): Move {
+        return board.getPiecesFor(type = Pawn::class)
+            .flatMap { it.getAllowedMoves(board) }
+            .firstOrNull { it.an == pawnMovePgn }
+            ?: throw IllegalStateException("Pawn move $pawnMovePgn is not possible")
+    }
+
+    /**
+     * Returns the only promotion move matching the pgn string stored in given [match] result.
+     */
+    private fun resolvePromotionMove(board: Board, match: MatchResult): PromotionMove {
+        val (basicMoveStr, _, promotedTo) = match.destructured.toList()
+        val basicMove: BasicMove = resolvePawnMove(board, basicMoveStr) as BasicMove
         val (pawn, destination) = basicMove
 
         val promotedPiece: Piece = when (promotedTo) {
@@ -134,42 +160,16 @@ object PgnImporter {
         return PromotionMove(basicMove, promotedPiece)
     }
 
-    private fun constructCastling(board: Board, match: MatchResult): CastlingMove {
-        val queenSide = match.groupValues[1].isNotBlank()
-
-        return board.getKing().getAllowedMoves(board)
-            .filterIsInstance<CastlingMove>()
-            .first { it.queenSide == queenSide }
-    }
-
-    private fun resolvePieceClass(letter: String): KClass<out Piece> = when (letter) {
+    /**
+     * Returns the piece class represented by this letter.
+     */
+    private fun String.pieceClass(): KClass<out Piece> = when (this) {
         "Q" -> Queen::class
         "K" -> King::class
         "B" -> Bishop::class
         "R" -> Rook::class
         "N" -> Knight::class
-        else -> throw IllegalArgumentException("No piece recognized by the letter $letter")
-    }
-
-    private fun String.toPosition(): Position {
-        require(length == 2 && this.matches("""[a-h][1-8]""".toRegex()))
-
-        val row = 8 - Character.getNumericValue(this[1])
-        val col = "abcdefgh".indexOf(this[0])
-        return Position(row, col)
-    }
-
-    private operator fun <T> List<T>.component6(): T {
-        return get(5)
+        else -> throw IllegalArgumentException("No piece recognized by the letter $this")
     }
 
 }
-
-fun main(args: Array<String>) {
-//    val board: Board = PgnImporter.importPgn("1. g4 f5 2. gxf5 Nf6 3. e4 Nxe4 4. Bh3 Nxf2 5. Nf3 g5 6. O-O")
-//    println(board.playedMoves)
-
-    val a = """[Event "F/S Return Match"]"""
-    println(a.matches("""[.*]""".toRegex(RegexOption.DOT_MATCHES_ALL)))
-}
-
