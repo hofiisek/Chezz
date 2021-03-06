@@ -1,9 +1,6 @@
 package board
 
-import game.Move
-import game.Player
-import game.perform
-import game.theOtherPlayer
+import game.*
 import piece.*
 import kotlin.reflect.KClass
 import kotlin.reflect.cast
@@ -59,8 +56,8 @@ class Board {
      */
     constructor(
         previousBoard: Board,
-        updatedSquaresByPosition: Map<Position, Square> = emptyMap(),
-        takeTurns: Boolean = false,
+        updatedSquaresByPosition: Map<Position, Square>,
+        takeTurns: Boolean,
         playedMoves: List<Move>
     ) {
         this.squares = Matrix(8, 8) { row, col ->
@@ -108,7 +105,7 @@ class Board {
     /**
      * Returns all pieces of given [player] and [type]
      */
-    fun <T: Piece> getPiecesFor(player: Player = playerOnTurn, type: KClass<T>): List<T> {
+    fun <T: Piece> getPieces(player: Player = playerOnTurn, type: KClass<T>): List<T> {
         return squares
                 .mapNotNull { it.piece }
                 .filter { it.player == player }
@@ -117,13 +114,29 @@ class Board {
     }
 
     /**
-     * Returns all pieces for given [player]
+     * Returns all pieces of given [player]
      */
-    fun getPiecesFor(player: Player = playerOnTurn): List<Piece> {
+    fun getPieces(player: Player = playerOnTurn): List<Piece> {
         return squares
                 .mapNotNull { it.piece }
                 .filter { it.player == player }
     }
+
+    /**
+     * Returns the king of the player on turn
+     */
+    fun getKing(): Piece = getPieces(playerOnTurn, King::class).first()
+
+    /**
+     * Returns a [GameResult] describing the current state of this board
+     */
+    fun getGameResult(): GameResult = when {
+        isStalemate() -> GameResult.Draw(DrawType.STALEMATE)
+        isCheckmate() && whiteOnTurn() -> GameResult.BlackWins(WinType.CHECKMATE)
+        isCheckmate() && !whiteOnTurn() -> GameResult.WhiteWins(WinType.CHECKMATE)
+        else -> GameResult.StillPlaying
+    }
+
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -175,7 +188,7 @@ fun Board.whiteOnTurn(): Boolean = playerOnTurn == Player.WHITE
  */
 fun Board.playMove(move: Move, takeTurns: Boolean = true): Board = Board(
     previousBoard = this,
-    updatedSquaresByPosition = move.perform().associateBy { it.position },
+    updatedSquaresByPosition = move.getAffectedSquares().associateBy { it.position },
     takeTurns = takeTurns,
     playedMoves = playedMoves.plus(move)
 )
@@ -185,4 +198,4 @@ fun Board.playMove(move: Move, takeTurns: Boolean = true): Board = Board(
  * the players do not take turns - the move is only simulated to obtain the board state if
  * the move was played
  */
-fun Board.simulateMove(move: Move): Board = playMove(move = move, takeTurns = false)
+fun Board.simulateMove(move: Move): Board = playMove(move, false)
