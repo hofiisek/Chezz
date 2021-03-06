@@ -130,7 +130,7 @@ class BoardController : Controller() {
      * Checks whether the game has ended, and if so, opens up the game-over window,
      * otherwise does nothing
      */
-    private fun checkGameOver() = when (val result = currentBoard.getGameResult()) {
+    private fun checkGameOver() = when (val result = getGameResult()) {
         GameResult.StillPlaying -> Unit
         else -> boardView.openGameOverWindow(result)
     }
@@ -153,11 +153,22 @@ class BoardController : Controller() {
     }
 
     /**
+     * Returns true if the game is currently being played
+     */
+    fun hasGameStarted(): Boolean = currentBoard != Board.emptyBoard()
+
+    /**
+     * Returns a [GameResult] describing the current state of the [currentBoard]
+     */
+    fun getGameResult(): GameResult = currentBoard.getGameResult()
+
+    /**
      * Undoes the last move, or does nothing if the game hasn't started yet
      */
     fun undoLastMove() {
-        if (currentBoard != Board.emptyBoard()) {
-            currentBoard = currentBoard.previousBoard ?: currentBoard
+        val prevBoard = currentBoard.previousBoard
+        if (hasGameStarted() && prevBoard != null) {
+            currentBoard = prevBoard
         }
     }
 

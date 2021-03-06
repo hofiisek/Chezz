@@ -1,5 +1,7 @@
 package game
 
+import game.GameResult.*
+
 /**
  * The result of the game, either a win, draw, or unknown if the game is still being played.
  *
@@ -11,6 +13,17 @@ sealed class GameResult {
     data class Draw(val type: DrawType) : GameResult()
     object StillPlaying : GameResult()
 }
+
+/**
+ * Returns a PGN string representing the game result
+ */
+fun GameResult.pgnString(): String = when (this) {
+    is Draw -> "1/2-1/2"
+    is WhiteWins -> "1-0"
+    is BlackWins -> "0-1"
+    StillPlaying -> "*"
+}
+
 
 /**
  * Possible ways of winning

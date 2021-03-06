@@ -27,15 +27,7 @@ object PgnExporter {
      * notations to be unambiguous.
      */
     private tailrec fun exportRecursive(board: Board, moves: Iterator<Move>, pgn: String): String {
-        if (!moves.hasNext()) {
-            val result = when (board.getGameResult()) {
-                is GameResult.Draw -> "1/2-1/2"
-                is GameResult.WhiteWins -> "1-0"
-                is GameResult.BlackWins -> "0-1"
-                GameResult.StillPlaying -> "*"
-            }
-            return "$pgn $result"
-        }
+        if (!moves.hasNext()) return "$pgn${board.getGameResult().pgnString()}"
 
         val move = moves.next()
         val newBoard = board.playMove(move)
