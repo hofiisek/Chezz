@@ -87,7 +87,7 @@ val BasicMove.anWithPosition: String
 fun Move.getAlgebraicNotation(board: Board): String = when {
     this is BasicMove && this.piece !is Pawn -> {
         // different pieces that can move to the same square
-        val otherPieces: List<Piece> = board.getPiecesFor(type = this.piece::class)
+        val otherPieces: List<Piece> = board.getPieces(type = this.piece::class)
             .filter { it != this.piece }
             .flatMap { it.getAllowedMoves(board).filterIsInstance<BasicMove>() }
             .filter { it.to == this.to }

@@ -124,7 +124,7 @@ object PgnImporter {
     private fun resolveBasicMove(board: Board, match: MatchResult): BasicMove {
         val (basicMoveStr, pieceLetter) = match.groupValues
 
-        return board.getPiecesFor(type = pieceLetter.pieceClass())
+        return board.getPieces(type = pieceLetter.pieceClass())
             .flatMap { it.getAllowedMoves(board) }
             .filterIsInstance<BasicMove>()
             .firstOrNull { it.getAlgebraicNotation(board) == basicMoveStr }
@@ -135,7 +135,7 @@ object PgnImporter {
      * Returns the only pawn move matching given [pawnMovePgn].
      */
     private fun resolvePawnMove(board: Board, pawnMovePgn: String): Move {
-        return board.getPiecesFor(type = Pawn::class)
+        return board.getPieces(type = Pawn::class)
             .flatMap { it.getAllowedMoves(board) }
             .firstOrNull { it.an == pawnMovePgn }
             ?: throw IllegalStateException("Pawn move $pawnMovePgn is not possible")

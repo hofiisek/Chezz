@@ -70,7 +70,7 @@ object MoveGenerator {
      * moves are available considering the given [board] state.
      */
     private fun enPassant(pawn: Pawn, board: Board): Set<Move> {
-        val enemyPawns: List<Pawn> = board.getPiecesFor(pawn.theOtherPlayer, Pawn::class)
+        val enemyPawns: List<Pawn> = board.getPieces(pawn.theOtherPlayer, Pawn::class)
         return enemyPawns
             .filter { enemyPawn ->
                 if (!enemyPawn.advancedTwoSquares()) return@filter false
@@ -124,7 +124,7 @@ object MoveGenerator {
         // avoid infinite recursion when determining whether some position or the king is in check
         if (!validateForCheck) return emptySet()
 
-        val rooks: List<Rook> = board.getPiecesFor(king.player, Rook::class)
+        val rooks: List<Rook> = board.getPieces(king.player, Rook::class)
                 .filterNot { it.hasMoved }
 
         if (rooks.isEmpty() || king.hasMoved || king.isInCheck(board)) return emptySet()

@@ -52,7 +52,7 @@ data class EnPassantMove(val pawn: Piece, val to: Position, val capturedPawn: Pi
 /**
  * Performs the move on the given [board] and returns the list of squares affected
  */
-fun Move.perform(): List<Square> = when (this) {
+fun Move.getAffectedSquares(): List<Square> = when (this) {
     is BasicMove -> {
         val (piece, destination) = this
         listOf(
