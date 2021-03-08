@@ -13,21 +13,21 @@ import game.*
 object PgnExporter {
 
     /**
-     * Returns a string with the PGN movetext representing the given [board].
+     * Processes the given [board] and returns its PGN "movetext" representation
      */
     fun exportToPgn(board: Board): String {
         return exportRecursive(Board.initialBoard(), board.playedMoves.iterator(), "")
     }
 
     /**
-     * Recursively accumulates the given [pgn] string by performing given [moves] one by one
+     * Recursively accumulates the given [movetext] string by performing given [moves] one by one
      * on the current [board]. The current board state needs to be known throughout the
      * recursion, to be able to resolve situations where multiple pieces of the same type
      * can move to the same destination, which would cause their standard algebraic
      * notations to be unambiguous.
      */
-    private tailrec fun exportRecursive(board: Board, moves: Iterator<Move>, pgn: String): String {
-        if (!moves.hasNext()) return "$pgn${board.getGameResult().pgnString()}"
+    private tailrec fun exportRecursive(board: Board, moves: Iterator<Move>, movetext: String): String {
+        if (!moves.hasNext()) return "$movetext${board.getGameResult().asString()}"
 
         val move = moves.next()
         val newBoard = board.playMove(move)
@@ -39,12 +39,13 @@ object PgnExporter {
             else -> ""
         }
 
-        return exportRecursive(
-            board = newBoard,
-            moves = moves,
-            pgn = "$pgn$roundNumOrEmpty${move.getAlgebraicNotation(board)}$checkOrCheckmateSignOrEmpty "
-        )
+        val toAppend = "$roundNumOrEmpty${move.getAlgebraicNotation(board)}$checkOrCheckmateSignOrEmpty "
+        val newlineOrEmpty = if (movetext.charsSinceNewline() + toAppend.length > 80) "\n" else ""
+
+        return exportRecursive(newBoard, moves, "$movetext$newlineOrEmpty$toAppend")
     }
 
-
+    private fun String.charsSinceNewline(): Int {
+        return length - maxOf(0, lastIndexOf('\n'))
+    }
 }
