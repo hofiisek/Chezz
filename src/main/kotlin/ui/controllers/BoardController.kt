@@ -181,7 +181,7 @@ class BoardController : Controller() {
     }
 
     /**
-     * Processes current board state to a string in pgn format
+     * Returns the PGN "movetext" representation of the [currentBoard]
      */
     fun exportPgn(): String = PgnExporter.exportToPgn(currentBoard)
 

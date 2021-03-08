@@ -17,7 +17,7 @@ sealed class GameResult {
 /**
  * Returns a PGN string representing the game result
  */
-fun GameResult.pgnString(): String = when (this) {
+fun GameResult.asString(): String = when (this) {
     is Draw -> "1/2-1/2"
     is WhiteWins -> "1-0"
     is BlackWins -> "0-1"
