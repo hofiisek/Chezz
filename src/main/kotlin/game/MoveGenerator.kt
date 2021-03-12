@@ -99,22 +99,22 @@ object MoveGenerator {
     /**
      * Returns the position of the pawn if it moves forward by [n]
      */
-    private fun Pawn.forward(n: Int = 1): Position = this.position add (Direction(rowDirection, 0) times n)
+    private fun Pawn.forward(n: Int = 1): Position = this.position plus (Direction(rowDirection, 0) times n)
 
     /**
      * Returns the position of the pawn if it moves backwards by [n]
      */
-    private fun Pawn.backward(n: Int = 1): Position = this.position sub (Direction(rowDirection, 0) times n)
+    private fun Pawn.backward(n: Int = 1): Position = this.position minus (Direction(rowDirection, 0) times n)
 
     /**
      * Returns the position of the pawn if it moves forward left
      */
-    private fun Pawn.forwardLeft(): Position = this.position add Direction(rowDirection, -1)
+    private fun Pawn.forwardLeft(): Position = this.position plus Direction(rowDirection, -1)
 
     /**
      * Returns the position of the pawn if it moves forward right
      */
-    private fun Pawn.forwardRight(): Position = this.position add Direction(rowDirection, +1)
+    private fun Pawn.forwardRight(): Position = this.position plus Direction(rowDirection, +1)
 
     /**
      * Returns a set of castling moves for given [king], or an empty set if castling is not possible
@@ -186,7 +186,7 @@ object MoveGenerator {
         fun generateMovesRecursive(dir: Direction, n: Int, moves: Set<Move> = emptySet()): Set<Move> {
             if (n > maxDistance) return moves
 
-            val newPos = piece.position add (dir times n)
+            val newPos = piece.position plus (dir times n)
             val newSquare = board.getSquareOrNull(newPos) ?: return moves
 
             return when {

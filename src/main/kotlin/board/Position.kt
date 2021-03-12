@@ -27,7 +27,7 @@ data class Position(val row: Int, val col: Int) {
     val isOnBoard: Boolean = row in (0..7) && col in (0..7)
 }
 
-infix fun Position.add(other: Position) = Position(this.row + other.row, this.col + other.col)
-infix fun Position.add(other: Pair<Int, Int>) = this add Position(other.first, other.second)
+infix fun Position.plus(other: Position) = Position(this.row + other.row, this.col + other.col)
+infix fun Position.plus(other: Pair<Int, Int>) = this plus Position(other.first, other.second)
 
-infix fun Position.sub(other: Pair<Int, Int>) = Position(this.row - other.first, this.col - other.second)
+infix fun Position.minus(other: Pair<Int, Int>) = Position(this.row - other.first, this.col - other.second)
