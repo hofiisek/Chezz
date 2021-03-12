@@ -1,4 +1,4 @@
-package ui.dialogs
+package ui.fragments
 
 import game.GameResult
 import game.WinType
@@ -74,8 +74,10 @@ class GameOverDialog : Fragment("Game over") {
                 close()
             }
             button("Save game").action {
-                // TODO move saving/loading to separate component or duplicate code here?
-                println(boardController.exportPgn())
+                find<SaveGameDialog>(
+                    SaveGameDialog::movetext to boardController.exportPgn(),
+                    SaveGameDialog::result to boardController.getGameResult()
+                ).openModal(resizable = false)
                 close()
             }
             button("Convince yourself").action { close() }
