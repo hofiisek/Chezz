@@ -15,8 +15,8 @@ import ui.controllers.BoardController
 import ui.controllers.ViewUpdate
 import ui.controllers.ViewUpdate.*
 import ui.controllers.ViewUpdate.Nothing
-import ui.dialogs.GameOverDialog
-import ui.dialogs.PromotionDialog
+import ui.fragments.GameOverDialog
+import ui.fragments.PromotionDialog
 
 /**
  * Main view representing the chess board UI.

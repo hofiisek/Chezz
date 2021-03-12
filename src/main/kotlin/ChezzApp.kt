@@ -14,8 +14,9 @@ class ChezzApp : App(ChezzAppView::class) {
     override fun start(stage: Stage) {
         super.start(stage)
         stage.isResizable = false
-        stage.height = 800.0
-        stage.width = 1000.0
+        // how to set window size based on the contents?
+        stage.height = 700.0
+        stage.width = 645.0
         stage.icons.add(Image("/chess_icon.png"))
     }
 

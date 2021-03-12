@@ -1,4 +1,4 @@
-package ui.dialogs
+package ui.fragments
 
 import javafx.beans.property.SimpleObjectProperty
 import javafx.geometry.HPos
@@ -10,7 +10,7 @@ import javafx.scene.paint.Color
 import javafx.scene.shape.Rectangle
 import piece.*
 import tornadofx.*
-import ui.dialogs.PromotionDialog.PieceType.*
+import ui.fragments.PromotionDialog.PieceType.*
 
 /**
  * TornadoFX hacks
@@ -24,7 +24,6 @@ class PromotionPiece {
 class PromotionPieceModel : ItemViewModel<PromotionPiece>() {
     val pieceType = bind(PromotionPiece::pieceProperty)
 }
-
 
 /**
  * The promotion dialog that pops up when a pawn reaches the other end of the board
@@ -43,7 +42,7 @@ class PromotionDialog : Fragment("Promotion") {
 
     override val root: Parent = gridpane {
         row {
-            values().forEach { pieceType -> add(choice(pieceType)) }
+            PieceType.values().forEach { pieceType -> add(choice(pieceType)) }
         }
     }
 
@@ -87,7 +86,6 @@ class PromotionDialog : Fragment("Promotion") {
         GridPane.setHalignment(this, HPos.CENTER)
     }
 
-
     /**
      * Types of pieces to which the pawn can be promoted
      */
@@ -97,6 +95,4 @@ class PromotionDialog : Fragment("Promotion") {
         BISHOP,
         KNIGHT
     }
-
 }
-

@@ -9,8 +9,8 @@ import tornadofx.Controller
 import tornadofx.Scope
 import tornadofx.ItemViewModel
 import ui.controllers.ViewUpdate.*
-import ui.dialogs.PromotionPieceModel
-import ui.dialogs.PromotionDialog
+import ui.fragments.PromotionPieceModel
+import ui.fragments.PromotionDialog
 import ui.views.BoardView
 import java.io.File
 import kotlin.properties.Delegates.observable

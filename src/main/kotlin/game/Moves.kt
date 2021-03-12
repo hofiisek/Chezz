@@ -5,7 +5,7 @@ import board.Square
 import piece.Pawn
 import piece.Piece
 import piece.moveTo
-import ui.dialogs.PromotionDialog
+import ui.fragments.PromotionDialog
 
 /**
  * Abstract parent of a single move with a piece, which can be either a basic move,
