@@ -1,7 +1,6 @@
 package io
 
 import board.Board
-import board.playMove
 import game.*
 import piece.*
 import java.io.File
