@@ -39,8 +39,7 @@ sealed class Piece {
     /**
      * Whether the piece has already moved from its original position
      */
-    val hasMoved: Boolean
-        get() = history.isNotEmpty()
+    val hasMoved: Boolean get() = history.isNotEmpty()
 
     /**
      * The opposite player

@@ -36,7 +36,7 @@ class Board {
      * Initializes a new board with pieces on their initial positions and the white player
      * on turn if [setPieces] is true, or an empty board without pieces
      */
-    constructor(setPieces: Boolean = true) {
+    private constructor(setPieces: Boolean = true) {
         this.squares = Matrix(8, 8) { row, col ->
             val position = Position(row, col)
             if (!setPieces) {
