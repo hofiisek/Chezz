@@ -23,8 +23,8 @@ object MoveGenerator {
      * its own king in check.
      */
     fun generate(piece: Piece, board: Board, validateForCheck: Boolean = true): Set<Move> = when(piece) {
-        is Pawn -> pawnMoves(piece, board).plus(enPassant(piece, board))
-        is King -> generateMoves(board, piece, 1).plus(castling(piece, board, validateForCheck))
+        is Pawn -> pawnMoves(piece, board) + enPassant(piece, board)
+        is King -> generateMoves(board, piece, 1) + castling(piece, board, validateForCheck)
         is Knight -> generateMoves(board, piece, 1)
         is Rook -> generateMoves(board, piece, 7)
         is Bishop -> generateMoves(board, piece, 7)
@@ -40,29 +40,37 @@ object MoveGenerator {
     private fun pawnMoves(pawn: Pawn, board: Board): Set<Move> {
         val moves: MutableSet<Move> = mutableSetOf()
 
-        // basic move forward by 1 square
-        val forwardPos = pawn.forward()
-        if (board.getSquareOrNull(forwardPos)?.isUnoccupied == true) {
-            moves.add(BasicMove(pawn, forwardPos))
+        // move forward by 1 square
+        pawn.forward().let {
+            if (board.getSquareOrNull(it)?.isUnoccupied == true) {
+                moves.add(BasicMove(pawn, it))
+            }
+        }
 
-            // move forward by 2 squares, if it is the first move and the skipping square is free
-            val forwardPosByTwo = pawn.forward(2)
-            if (!pawn.hasMoved && board.getSquareOrNull(forwardPosByTwo)?.isUnoccupied == true) {
-                moves.add(BasicMove(pawn, forwardPosByTwo))
+        // move forward by 2 squares (two-square advance)
+        pawn.forward(2).let { forwardByTwo ->
+            val forwardByOne = pawn.forward()
+            when {
+                pawn.hasMoved -> return@let
+                board.getSquareOrNull(forwardByOne)?.isOccupied == true -> return@let
+                board.getSquareOrNull(forwardByTwo)?.isOccupied == true -> return@let
+                else -> moves.add(BasicMove(pawn, forwardByTwo))
             }
         }
 
         // capture moves
-        val forwardLeft = pawn.forwardLeft()
-        if (board.getSquareOrNull(forwardLeft)?.occupiedBy(pawn.player.theOtherPlayer) == true) {
-            moves.add(BasicMove(pawn, forwardLeft, true))
+        pawn.forwardLeft().let {
+            if (board.getSquareOrNull(it) occupiedBy pawn.player.theOtherPlayer) {
+                moves.add(BasicMove(pawn, it, true))
+            }
         }
-        val forwardRight = pawn.forwardRight()
-        if (board.getSquareOrNull(forwardRight)?.occupiedBy(pawn.player.theOtherPlayer) == true) {
-            moves.add(BasicMove(pawn, forwardRight, true))
+        pawn.forwardRight().let {
+            if (board.getSquareOrNull(it) occupiedBy pawn.player.theOtherPlayer) {
+                moves.add(BasicMove(pawn, it, true))
+            }
         }
 
-        return moves
+        return moves.toSet()
     }
 
     /**
