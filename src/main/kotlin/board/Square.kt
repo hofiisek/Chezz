@@ -13,8 +13,12 @@ data class Square(val position: Position, val piece: Piece? = null) {
     /**
      * Whether the square is unoccupied
      */
-    val isUnoccupied: Boolean
-        get() = piece == null
+    val isUnoccupied: Boolean get() = piece == null
+
+    /**
+     * Whether the square is occupied
+     */
+    val isOccupied: Boolean get() = piece != null
 
     init {
         require(position.isOnBoard) {
@@ -32,4 +36,4 @@ infix fun Square.occupiedBySamePlayerAs(piece: Piece): Boolean = this.piece?.pla
 /**
  * Returns true if the square is occupied by the given [player]
  */
-infix fun Square.occupiedBy(player: Player): Boolean = this.piece?.player == player
+infix fun Square?.occupiedBy(player: Player): Boolean = this?.piece?.player == player
