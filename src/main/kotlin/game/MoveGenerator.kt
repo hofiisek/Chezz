@@ -22,7 +22,7 @@ object MoveGenerator {
      * If [validateForCheck] is true, for each move the it is validated that it does not put or leave
      * its own king in check.
      */
-    fun generate(piece: Piece, board: Board, validateForCheck: Boolean = true): Set<Move> = when(piece) {
+    fun generate(piece: Piece, board: Board, validateForCheck: Boolean = true): Set<Move> = when (piece) {
         is Pawn -> pawnMoves(piece, board) + enPassant(piece, board)
         is King -> generateMoves(board, piece, 1) + castling(piece, board, validateForCheck)
         is Knight -> generateMoves(board, piece, 1)
@@ -133,7 +133,7 @@ object MoveGenerator {
         if (!validateForCheck) return emptySet()
 
         val rooks: List<Rook> = board.getPieces(king.player, Rook::class)
-                .filterNot { it.hasMoved }
+            .filterNot { it.hasMoved }
 
         if (rooks.isEmpty() || king.hasMoved || king.isInCheck(board)) return emptySet()
 
@@ -183,7 +183,6 @@ object MoveGenerator {
      */
     private infix fun Piece.moveLeftBy(n: Int) = Position(position.row, position.col - n)
 
-
     /**
      * Recursively generates moves for given [piece] until either:
      * - an own piece is hit, or
@@ -211,7 +210,6 @@ object MoveGenerator {
      * Multiplies the receiver [Direction] by [n] along both axes
      */
     private infix fun Direction.times(n: Int) = Direction(n * this.first, n * this.second)
-
 }
 
 /**

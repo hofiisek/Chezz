@@ -25,11 +25,11 @@ class SaveGameDialog : Fragment("Tag pairs") {
 
     // Seven Tag Roster
     private val event = model.bind { SimpleStringProperty(null, "Event", "ChessNoobs 2021") }
-    private val site = model.bind { SimpleStringProperty(null, "Site", "Prague, CZE")  }
-    private val date = model.bind { SimpleObjectProperty(null, "Date", LocalDate.now())  }
-    private val round = model.bind { SimpleStringProperty(null, "Round", "1")  }
-    private val white = model.bind { SimpleStringProperty(null, "White", "You")  }
-    private val black = model.bind { SimpleStringProperty(null, "Black", "Also you?")  }
+    private val site = model.bind { SimpleStringProperty(null, "Site", "Prague, CZE") }
+    private val date = model.bind { SimpleObjectProperty(null, "Date", LocalDate.now()) }
+    private val round = model.bind { SimpleStringProperty(null, "Round", "1") }
+    private val white = model.bind { SimpleStringProperty(null, "White", "You") }
+    private val black = model.bind { SimpleStringProperty(null, "Black", "Also you?") }
 
     override val root: Parent = form {
         fieldset {
@@ -70,6 +70,4 @@ class SaveGameDialog : Fragment("Tag pairs") {
         }
         return """[$tag "$str"]"""
     }
-
-
 }

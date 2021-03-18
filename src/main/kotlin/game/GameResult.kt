@@ -24,7 +24,6 @@ fun GameResult.asString(): String = when (this) {
     StillPlaying -> "*"
 }
 
-
 /**
  * Possible ways of winning
  */

@@ -39,7 +39,7 @@ class Board {
     private constructor(setPieces: Boolean = true) {
         this.squares = Matrix(8, 8) { row, col ->
             Position(row, col).let {
-                Square(it, if (setPieces) resolvePiece(it) else null )
+                Square(it, if (setPieces) resolvePiece(it) else null)
             }
         }
         this.playerOnTurn = Player.WHITE
@@ -94,12 +94,12 @@ class Board {
     /**
      * Returns all pieces of given [player] and [type]
      */
-    fun <T: Piece> getPieces(player: Player = playerOnTurn, type: KClass<T>): List<T> {
+    fun <T : Piece> getPieces(player: Player = playerOnTurn, type: KClass<T>): List<T> {
         return squares
-                .mapNotNull { it.piece }
-                .filter { it.player == player }
-                .filterIsInstance(type.java)
-                .map { type.cast(it) }
+            .mapNotNull { it.piece }
+            .filter { it.player == player }
+            .filterIsInstance(type.java)
+            .map { type.cast(it) }
     }
 
     /**
@@ -107,8 +107,8 @@ class Board {
      */
     fun getPieces(player: Player = playerOnTurn): List<Piece> {
         return squares
-                .mapNotNull { it.piece }
-                .filter { it.player == player }
+            .mapNotNull { it.piece }
+            .filter { it.player == player }
     }
 
     /**
@@ -133,7 +133,7 @@ class Board {
         val player: Player = if (position.row in 0..1) Player.BLACK else Player.WHITE
         return when (position.row) {
             1, 6 -> Pawn(player, position)
-            0, 7 -> when(position.col) {
+            0, 7 -> when (position.col) {
                 0, 7 -> Rook(player, position)
                 1, 6 -> Knight(player, position)
                 2, 5 -> Bishop(player, position)
@@ -179,7 +179,6 @@ class Board {
          */
         fun initialBoard() = Board()
     }
-
 }
 
 /**

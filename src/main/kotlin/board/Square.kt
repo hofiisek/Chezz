@@ -25,7 +25,6 @@ data class Square(val position: Position, val piece: Piece? = null) {
             "Square out of bounds"
         }
     }
-
 }
 
 /**

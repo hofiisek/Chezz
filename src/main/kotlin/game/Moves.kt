@@ -41,7 +41,11 @@ data class PromotionMove(val basicMove: BasicMove, val promotedTo: Piece) : Move
  * The castling move, which is the only move involving two pieces at once - [rook] and [king].
  * When the king moves left, the castling is said to be [queenSide].
  */
-data class CastlingMove(val rook: Pair<Piece, Position>, val king: Pair<Piece, Position>, val queenSide: Boolean) : Move()
+data class CastlingMove(
+    val rook: Pair<Piece, Position>,
+    val king: Pair<Piece, Position>,
+    val queenSide: Boolean
+) : Move()
 
 /**
  * The en passant move, during which the moving [pawn] captures the [capturedPawn] but ends up in a different
@@ -87,4 +91,3 @@ fun Move.getAffectedSquares(): List<Square> = when (this) {
         )
     }
 }
-

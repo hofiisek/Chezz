@@ -31,5 +31,4 @@ sealed class ViewUpdate {
      * if it's not the selected piece at the same time.
      */
     data class PieceSelected(val piece: Piece, val allowedMoves: Set<Square>, val checkedKing: Piece?) : ViewUpdate()
-
 }

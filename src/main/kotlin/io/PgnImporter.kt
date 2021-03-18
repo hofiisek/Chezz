@@ -170,5 +170,4 @@ object PgnImporter {
         "N" -> Knight::class
         else -> throw IllegalArgumentException("No piece recognized by the letter $this")
     }
-
 }

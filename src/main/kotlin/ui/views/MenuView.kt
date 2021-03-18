@@ -19,7 +19,7 @@ class MenuView : View() {
      */
     private val boardController: BoardController by inject()
 
-    override val root =  menubar {
+    override val root = menubar {
         menu("Play") {
             item("New game", "Shortcut+N").action {
                 boardController.startGame()

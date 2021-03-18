@@ -1,7 +1,7 @@
 package ui.views
 
-import tornadofx.View
 import tornadofx.*
+import tornadofx.View
 
 /**
  * Main view of the Chezz application, grouping together other views in a borderpane
@@ -15,6 +15,4 @@ class ChezzAppView : View("Chezz") {
         center<BoardView>()
         right<TimerView>()
     }
-
 }
-
