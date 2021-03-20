@@ -5,22 +5,16 @@ import piece.*
 import kotlin.math.abs
 
 /**
- * General moves generator.
- *
- * Basic moves are generated recursively for each movement direction for all pieces except for pawn,
- * whose movement, despite of being the most limited one, is quite special.
- *
- * Castling moves are generated for the king, because king's final destination after castling (file 'g' or 'c')
- * is non-reachable from his original position otherwise (in case of the rook, it would interfere with its other moves)
+ * The generator of valid moves
  *
  * @author Dominik Hoftych
  */
 object MoveGenerator {
 
     /**
-     * For given [piece], generates all allowed moves considering the current [board] state.
-     * If [validateForCheck] is true, for each move the it is validated that it does not put or leave
-     * its own king in check.
+     * For given [piece], generates all allowed moves considering the give [board] state.
+     * If [validateForCheck] is true, each move is validated to not put or leave its own king
+     * in check.
      */
     fun generate(piece: Piece, board: Board, validateForCheck: Boolean = true): Set<Move> = when (piece) {
         is Pawn -> pawnMoves(piece, board) + enPassant(piece, board)
@@ -129,7 +123,7 @@ object MoveGenerator {
      * considering the given [board] state.
      */
     private fun castling(king: Piece, board: Board, validateForCheck: Boolean): Set<Move> {
-        // avoid infinite recursion when determining whether some position or the king is in check
+        // avoid infinite recursion when determining check
         if (!validateForCheck) return emptySet()
 
         val rooks: List<Rook> = board.getPieces(king.player, Rook::class)
