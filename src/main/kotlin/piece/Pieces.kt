@@ -10,7 +10,7 @@ import javafx.scene.image.ImageView
  * Abstract parent of all chess pieces, i.e. pawn, rook, bishop, knight, queen and king.
  * Each piece belongs to a particular [player], occupies a particular square on the [position] and
  * records its [history], i.e. a list of previous its previous positions.
- * 
+ *
  * @author Dominik Hoftych
  */
 sealed class Piece {
@@ -29,7 +29,7 @@ sealed class Piece {
      * Ordered list of positions that were occupied by the piece previously
      */
     abstract val history: List<Position>
-    
+
     /**
      * Name of the piece in the "pieceType_colorLetter" format, e.g. Rook_b or King_w.
      * Is used when loading piece images so it MUST correspond.
@@ -63,20 +63,19 @@ sealed class Piece {
      */
     fun getAllowedMoves(board: Board, validateForCheck: Boolean = true): Set<Move> =
         MoveGenerator.generate(this, board, validateForCheck)
-
 }
 
 /**
  * Image (icon) of the piece
  */
 val Piece.icon: ImageView
-    get() = ImageView(Image("/pieces/${name}.png", 50.0, 50.0, true, true))
+    get() = ImageView(Image("/pieces/$name.png", 50.0, 50.0, true, true))
 
 /**
  * Moves with the piece to the square in given [position].
  * A new instance of [Piece] is initialized on its new position with the move recorded in its history list.
  */
-infix fun Piece.moveTo(position: Position): Piece = when(this) {
+infix fun Piece.moveTo(position: Position): Piece = when (this) {
     is Pawn -> Pawn(player, position, history.plus(position))
     is Rook -> Rook(player, position, history.plus(position))
     is Knight -> Knight(player, position, history.plus(position))
@@ -86,11 +85,11 @@ infix fun Piece.moveTo(position: Position): Piece = when(this) {
 }
 
 data class Pawn(
-        override val player: Player,
-        override val position: Position,
-        override val history: List<Position> = listOf()
+    override val player: Player,
+    override val position: Position,
+    override val history: List<Position> = listOf()
 ) : Piece() {
-    
+
     override val name: String = "Pawn_${player.color()}"
 
     /**
@@ -100,88 +99,88 @@ data class Pawn(
 }
 
 data class Rook(
-        override val player: Player,
-        override val position: Position,
-        override val history: List<Position> = listOf()
+    override val player: Player,
+    override val position: Position,
+    override val history: List<Position> = listOf()
 ) : Piece() {
-    
+
     override val name: String = "Rook_${player.color()}"
     override val movement: Set<Direction> = setOf(
-            Direction(-1, 0), // up
-            Direction(0, 1),  // right
-            Direction(1, 0),  // down
-            Direction(0, -1)  // left
+        Direction(-1, 0), // up
+        Direction(0, 1), // right
+        Direction(1, 0), // down
+        Direction(0, -1) // left
     )
 }
 
 data class Knight(
-        override val player: Player,
-        override val position: Position,
-        override val history: List<Position> = listOf()
+    override val player: Player,
+    override val position: Position,
+    override val history: List<Position> = listOf()
 ) : Piece() {
-    
+
     override val name: String = "Knight_${player.color()}"
     override val movement: Set<Direction> = setOf(
-            Direction(-2, 1),  // up->right
-            Direction(-1, 2),  // right->up
-            Direction(1, 2),   // right->down
-            Direction(2, 1),   // down->right
-            Direction(2, -1),  // down->left
-            Direction(1, -2),  // left->down
-            Direction(-1, -2), // left->up
-            Direction(-2, -1), // up->left
+        Direction(-2, 1), // up->right
+        Direction(-1, 2), // right->up
+        Direction(1, 2), // right->down
+        Direction(2, 1), // down->right
+        Direction(2, -1), // down->left
+        Direction(1, -2), // left->down
+        Direction(-1, -2), // left->up
+        Direction(-2, -1), // up->left
     )
 }
 
 data class Bishop(
-        override val player: Player,
-        override val position: Position,
-        override val history: List<Position> = listOf()
+    override val player: Player,
+    override val position: Position,
+    override val history: List<Position> = listOf()
 ) : Piece() {
-    
+
     override val name: String = "Bishop_${player.color()}"
     override val movement: Set<Direction> = setOf(
-            Direction(-1,  1), // up-right
-            Direction(1,  1),  // down-right
-            Direction(1, - 1),  // down-left
-            Direction(-1, - 1)  // up-left
+        Direction(-1, 1), // up-right
+        Direction(1, 1), // down-right
+        Direction(1, - 1), // down-left
+        Direction(-1, - 1) // up-left
     )
 }
 
 data class Queen(
-        override val player: Player,
-        override val position: Position,
-        override val history: List<Position> = listOf()
+    override val player: Player,
+    override val position: Position,
+    override val history: List<Position> = listOf()
 ) : Piece() {
-    
+
     override val name: String = "Queen_${player.color()}"
     override val movement: Set<Direction> = setOf(
-            Direction(-1, 0),  // up
-            Direction(-1, 1),  // up-right
-            Direction(0, 1), // right
-            Direction(1, 1),  // down-right
-            Direction(1, 0),  // down
-            Direction(1, -1), // down-left
-            Direction(0, -1),  // left
-            Direction(-1, -1)  // up-left
+        Direction(-1, 0), // up
+        Direction(-1, 1), // up-right
+        Direction(0, 1), // right
+        Direction(1, 1), // down-right
+        Direction(1, 0), // down
+        Direction(1, -1), // down-left
+        Direction(0, -1), // left
+        Direction(-1, -1) // up-left
     )
 }
 
 data class King(
-        override val player: Player,
-        override val position: Position,
-        override val history: List<Position> = listOf()
+    override val player: Player,
+    override val position: Position,
+    override val history: List<Position> = listOf()
 ) : Piece() {
-    
+
     override val name: String = "King_${player.color()}"
     override val movement: Set<Direction> = setOf(
-            Direction(-1, 0),  // up
-            Direction(-1, 1),  // up-right
-            Direction(0, 1), // right
-            Direction(1, 1),  // down-right
-            Direction(1, 0),  // down
-            Direction(1, -1), // down-left
-            Direction(0, -1),  // left
-            Direction(-1, -1)  // up-left
+        Direction(-1, 0), // up
+        Direction(-1, 1), // up-right
+        Direction(0, 1), // right
+        Direction(1, 1), // down-right
+        Direction(1, 0), // down
+        Direction(1, -1), // down-left
+        Direction(0, -1), // left
+        Direction(-1, -1) // up-left
     )
 }

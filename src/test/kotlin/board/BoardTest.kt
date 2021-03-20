@@ -9,7 +9,6 @@ import io.kotest.matchers.shouldNotBe
 import piece.Piece
 import piece.moveTo
 import randomEmptyPositionOtherThan
-import randomPositionOtherThan
 
 /**
  * @author Dominik Hoftych
@@ -60,5 +59,4 @@ class BoardTest : StringSpec({
             }
         }
     }
-
 })

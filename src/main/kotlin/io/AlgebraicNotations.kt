@@ -6,14 +6,13 @@ import game.*
 import io.AmbiguityLevel.*
 import piece.*
 
-
 /**
  * Unicode character representing the piece.
  * Currently unused - will be used once importing/exporting of PGN
  * files with unicode symbols of pieces is implemented.
  */
 val Piece.unicode: String
-    get() = when(this) {
+    get() = when (this) {
         is Pawn -> if (player == Player.WHITE) "\u2659" else "\u265F"
         is Rook -> if (player == Player.WHITE) "\u2656" else "\u265C"
         is Knight -> if (player == Player.WHITE) "\u2658" else "\u265E"
@@ -22,7 +21,7 @@ val Piece.unicode: String
         is King -> if (player == Player.WHITE) "\u2654" else "\u265A"
     }
 
-val Position.an: String get() = "${file}${rank}"
+val Position.an: String get() = "${file}$rank"
 
 /**
  * Letter representing the piece
@@ -43,7 +42,11 @@ val Piece?.letter: String
  */
 val Move.an: String
     get() = when (this) {
-        is BasicMove -> "${piece.letter}${if (isCapture && piece is Pawn) piece.position.file else ""}${if (isCapture) "x" else ""}${to.an}"
+        is BasicMove ->
+            piece.letter +
+                (if (isCapture && piece is Pawn) piece.position.file else "").toString() +
+                (if (isCapture) "x" else "") +
+                to.an
         is PromotionMove -> "${basicMove.an}=${promotedTo.letter}"
         is CastlingMove -> "O-O${if (queenSide) "-0" else ""}"
         is EnPassantMove -> "${pawn.position.file}x${to.an}"

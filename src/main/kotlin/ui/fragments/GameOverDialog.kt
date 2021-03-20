@@ -88,5 +88,4 @@ class GameOverDialog : Fragment("Game over") {
             }
         }
     }
-
 }

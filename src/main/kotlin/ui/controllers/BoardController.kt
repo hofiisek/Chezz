@@ -6,15 +6,14 @@ import io.PgnExporter
 import io.PgnImporter
 import piece.*
 import tornadofx.Controller
-import tornadofx.Scope
 import tornadofx.ItemViewModel
+import tornadofx.Scope
 import ui.controllers.ViewUpdate.*
-import ui.fragments.PromotionPieceModel
 import ui.fragments.PromotionDialog
+import ui.fragments.PromotionPieceModel
 import ui.views.BoardView
 import java.io.File
 import kotlin.properties.Delegates.observable
-
 
 /**
  * Main controller of the chess board UI.
@@ -86,11 +85,13 @@ class BoardController : Controller() {
             }
         }
 
-        boardView.updateView(PieceSelected(
-            piece = piece,
-            allowedMoves = allowedMovesBySquare.keys,
-            checkedKing = if (currentBoard.isCheck()) currentBoard.getKing() else null
-        ))
+        boardView.updateView(
+            PieceSelected(
+                piece = piece,
+                allowedMoves = allowedMovesBySquare.keys,
+                checkedKing = if (currentBoard.isCheck()) currentBoard.getKing() else null
+            )
+        )
     }
 
     /**
@@ -184,5 +185,4 @@ class BoardController : Controller() {
      * Returns the PGN "movetext" representation of the [currentBoard]
      */
     fun exportPgn(): String = PgnExporter.exportToPgn(currentBoard)
-
 }

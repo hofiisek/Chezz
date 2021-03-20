@@ -19,7 +19,6 @@ class ChezzApp : App(ChezzAppView::class) {
         stage.width = 645.0
         stage.icons.add(Image("/chess_icon.png"))
     }
-
 }
 
 /**

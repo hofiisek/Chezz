@@ -41,6 +41,6 @@ fun String.asPosition(): Position {
 
     return Position(
         8 - Character.getNumericValue(this.last()),
-        ('a' .. 'h').indexOf(this.first())
+        ('a'..'h').indexOf(this.first())
     )
 }

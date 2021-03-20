@@ -14,26 +14,26 @@ import io.kotest.matchers.shouldNotBe
 class TestingUtilsTest : StringSpec({
 
     "either a valid position is created or an exception" +
-    " is thrown when creating position from string" {
-        val ranks = listOf(1, 2, 3, 4, 5, 6, 7, 8)
-        val files = ('a' .. 'h')
+        " is thrown when creating position from string" {
+            val ranks = listOf(1, 2, 3, 4, 5, 6, 7, 8)
+            val files = ('a'..'h')
 
-        ranks.shuffled().zip(files.shuffled()).forEach { (rank, file) ->
-            "$file$rank".asPosition().let {
-                it shouldBe Position(8 - rank, files.indexOf(file))
-                it.rank shouldBe rank
-                it.file shouldBe file
+            ranks.shuffled().zip(files.shuffled()).forEach { (rank, file) ->
+                "$file$rank".asPosition().let {
+                    it shouldBe Position(8 - rank, files.indexOf(file))
+                    it.rank shouldBe rank
+                    it.file shouldBe file
+                }
+            }
+
+            val invalidFiles = ('i'..'z')
+            val invalidRanks = (8..20).plus((-10 until 0))
+            repeat(20) {
+                shouldThrowExactly<IllegalArgumentException> {
+                    "${invalidFiles.random()}${invalidRanks.random()}".asPosition()
+                }
             }
         }
-
-        val invalidFiles = ('i' .. 'z')
-        val invalidRanks = (8 .. 20).plus((-10 until 0))
-        repeat(20) {
-            shouldThrowExactly<IllegalArgumentException> {
-                "${invalidFiles.random()}${invalidRanks.random()}".asPosition()
-            }
-        }
-    }
 
     "getting a random position returns a position other that the given" {
         repeat(20) {
@@ -53,7 +53,6 @@ class TestingUtilsTest : StringSpec({
             }
         }
     }
-
 })
 
 fun unoccupied() = object : Matcher<Square> {

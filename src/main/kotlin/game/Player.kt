@@ -18,4 +18,4 @@ val Player.theOtherPlayer: Player
 /**
  * Color of the player, either "w" as white, or "b" as black
  */
-fun Player.color(): String = if(this == Player.WHITE) "w" else "b"
+fun Player.color(): String = if (this == Player.WHITE) "w" else "b"

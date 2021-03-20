@@ -36,7 +36,7 @@ data class Matrix<T>(
         override fun hasNext(): Boolean = idx < n * m
 
         override fun next(): T {
-            return matrix[idx/n][idx++ % m]
+            return matrix[idx / n][idx++ % m]
         }
     }
 
@@ -59,9 +59,7 @@ data class Matrix<T>(
         result = 31 * result + matrix.hashCode()
         return result
     }
-
 }
-
 
 /**
  * Returns the particular [Square] on given [position] of the matrix
@@ -81,7 +79,7 @@ fun <T> Matrix<T>.forEachRow(action: Matrix<T>.(item: List<T>) -> Unit) {
  * Performs the given [action] on each element, providing both row and column index with the element
  */
 fun <T> Matrix<T>.forEachIndexed(action: Matrix<T>.(row: Int, col: Int, item: T) -> Unit) {
-    for ((rowIdx, row) in matrix.withIndex()){
+    for ((rowIdx, row) in matrix.withIndex()) {
         for ((colIdx, cell) in row.withIndex()) {
             action(rowIdx, colIdx, cell)
         }

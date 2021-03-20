@@ -128,7 +128,7 @@ class BoardView : View() {
      */
     private fun repaintBoard() {
         boardSquares.forEachIndexed { row, col, square ->
-            square.fill = if((row * 7 + col) % 2 < 1) Color.SANDYBROWN else Color.SADDLEBROWN
+            square.fill = if ((row * 7 + col) % 2 < 1) Color.SANDYBROWN else Color.SADDLEBROWN
         }
     }
 
@@ -146,5 +146,4 @@ class BoardView : View() {
         find<PromotionDialog>(scope, PromotionDialog::pawnToPromote to pawn)
             .openModal(stageStyle = StageStyle.UNDECORATED, block = true, escapeClosesWindow = false)
     }
-
 }
