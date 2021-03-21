@@ -39,13 +39,18 @@ sealed class Piece {
     /**
      * Whether the piece has already moved from its original position
      */
-    val hasMoved: Boolean get() = history.isNotEmpty()
+    val hasMoved: Boolean get() = history.size > 1
+
+    /**
+     * Whether the piece belongs to the white player
+     */
+    val isWhite: Boolean get() = player == Player.WHITE
 
     /**
      * The opposite player
      */
     val theOtherPlayer: Player
-        get() = if (player == Player.WHITE) Player.BLACK else Player.WHITE
+        get() = if (isWhite) Player.BLACK else Player.WHITE
 
     /**
      * Movement of the piece defined as a set of directions along x and y axis respectively.
@@ -87,7 +92,7 @@ infix fun Piece.moveTo(position: Position): Piece = when (this) {
 data class Pawn(
     override val player: Player,
     override val position: Position,
-    override val history: List<Position> = listOf()
+    override val history: List<Position> = listOf(position)
 ) : Piece() {
 
     override val name: String = "Pawn_${player.color()}"
@@ -95,13 +100,13 @@ data class Pawn(
     /**
      * Direction along rows (either up or down based on pawn's color)
      */
-    val rowDirection: Int = if (player == Player.WHITE) -1 else 1
+    val rowDirection: Int = if (isWhite) -1 else 1
 }
 
 data class Rook(
     override val player: Player,
     override val position: Position,
-    override val history: List<Position> = listOf()
+    override val history: List<Position> = listOf(position)
 ) : Piece() {
 
     override val name: String = "Rook_${player.color()}"
@@ -116,7 +121,7 @@ data class Rook(
 data class Knight(
     override val player: Player,
     override val position: Position,
-    override val history: List<Position> = listOf()
+    override val history: List<Position> = listOf(position)
 ) : Piece() {
 
     override val name: String = "Knight_${player.color()}"
@@ -135,7 +140,7 @@ data class Knight(
 data class Bishop(
     override val player: Player,
     override val position: Position,
-    override val history: List<Position> = listOf()
+    override val history: List<Position> = listOf(position)
 ) : Piece() {
 
     override val name: String = "Bishop_${player.color()}"
@@ -150,7 +155,7 @@ data class Bishop(
 data class Queen(
     override val player: Player,
     override val position: Position,
-    override val history: List<Position> = listOf()
+    override val history: List<Position> = listOf(position)
 ) : Piece() {
 
     override val name: String = "Queen_${player.color()}"
@@ -169,7 +174,7 @@ data class Queen(
 data class King(
     override val player: Player,
     override val position: Position,
-    override val history: List<Position> = listOf()
+    override val history: List<Position> = listOf(position)
 ) : Piece() {
 
     override val name: String = "King_${player.color()}"

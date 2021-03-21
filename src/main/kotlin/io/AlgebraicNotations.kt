@@ -13,12 +13,12 @@ import piece.*
  */
 val Piece.unicode: String
     get() = when (this) {
-        is Pawn -> if (player == Player.WHITE) "\u2659" else "\u265F"
-        is Rook -> if (player == Player.WHITE) "\u2656" else "\u265C"
-        is Knight -> if (player == Player.WHITE) "\u2658" else "\u265E"
-        is Bishop -> if (player == Player.WHITE) "\u2657" else "\u265D"
-        is Queen -> if (player == Player.WHITE) "\u2655" else "\u265B"
-        is King -> if (player == Player.WHITE) "\u2654" else "\u265A"
+        is Pawn -> if (isWhite) "\u2659" else "\u265F"
+        is Rook -> if (isWhite) "\u2656" else "\u265C"
+        is Knight -> if (isWhite) "\u2658" else "\u265E"
+        is Bishop -> if (isWhite) "\u2657" else "\u265D"
+        is Queen -> if (isWhite) "\u2655" else "\u265B"
+        is King -> if (isWhite) "\u2654" else "\u265A"
     }
 
 val Position.an: String get() = "${file}$rank"
