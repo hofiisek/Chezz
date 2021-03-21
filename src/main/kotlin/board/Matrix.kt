@@ -36,6 +36,7 @@ data class Matrix<T>(
         override fun hasNext(): Boolean = idx < n * m
 
         override fun next(): T {
+            if (!this.hasNext()) throw NoSuchElementException()
             return matrix[idx / n][idx++ % m]
         }
     }

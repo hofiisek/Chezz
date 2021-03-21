@@ -139,9 +139,10 @@ object MoveGenerator {
             if (n > maxDistance) return moves
 
             val newPos = piece.position + (dir * n)
-            val newSquare = board.getSquareOrNull(newPos) ?: return moves
+            val newSquare = board.getSquareOrNull(newPos)
 
             return when {
+                newSquare == null -> moves
                 newSquare isOccupiedBy piece.player -> moves
                 newSquare isOccupiedBy piece.theOtherPlayer -> moves.plus(BasicMove(piece, newPos, true))
                 else -> generateMovesRecursive(dir, n + 1, moves.plus(BasicMove(piece, newPos)))

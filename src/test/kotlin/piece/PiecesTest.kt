@@ -30,13 +30,13 @@ class PiecesTest : StringSpec({
     }
 
     "piece's history is correctly tracked" {
-        val expectedHistory = (0..20).map { randomPosition() }
+        val randomPositions = (0..20).map { randomPosition() }
 
-        // need to mutate the piece here
+        // unfortunately need to mutate the piece here
         var piece = randomPiece()
-        expectedHistory.forEach { piece = piece moveTo it }
+        randomPositions.forEach { piece = piece moveTo it }
 
-        piece.position shouldBe expectedHistory.last()
-        piece.history shouldContainExactly expectedHistory
+        piece.position shouldBe randomPositions.last()
+        piece.history.drop(1) shouldContainExactly randomPositions
     }
 })
