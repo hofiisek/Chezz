@@ -35,4 +35,4 @@ infix fun Square.occupiedBySamePlayerAs(piece: Piece): Boolean = this.piece?.pla
 /**
  * Returns true if the square is occupied by the given [player]
  */
-infix fun Square?.occupiedBy(player: Player): Boolean = this?.piece?.player == player
+infix fun Square?.isOccupiedBy(player: Player): Boolean = this?.piece?.player == player
