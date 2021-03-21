@@ -32,37 +32,28 @@ object MoveGenerator {
      * by 1 square forward, two square advance moves, and capture moves.
      */
     private fun pawnMoves(pawn: Pawn, board: Board): Set<Move> {
-        fun Pawn.forwardBy(n: Int = 1): Position = position + (Direction(rowDirection, 0) * n)
+        fun Pawn.forwardBy(n: Int): Position = position + (Direction(rowDirection, 0) * n)
         fun Pawn.forwardLeft(): Position = position + Direction(rowDirection, -1)
         fun Pawn.forwardRight(): Position = position + Direction(rowDirection, +1)
 
-        val moves: MutableSet<Move> = mutableSetOf()
-
-        // move forward by 1 square
-        pawn.forwardBy().let {
-            if (board.getSquareOrNull(it)?.isUnoccupied == true) {
-                moves.add(BasicMove(pawn, it))
-            }
+        val forwardByOne = pawn.forwardBy(1)
+        val forwardByTwo = pawn.forwardBy(2)
+        val advanceMoves = if (board.getSquare(forwardByOne).isUnoccupied) {
+            if (!pawn.hasMoved && board.getSquare(forwardByTwo).isUnoccupied) {
+                listOf(forwardByOne, forwardByTwo)
+            } else {
+                listOf(forwardByOne)
+            }.map { BasicMove(pawn, it) }
+                .toSet()
+        } else {
+            emptySet()
         }
 
-        // move forward by 2 squares (two-square advance)
-        pawn.forwardBy(2).let { forwardByTwo ->
-            val forwardByOne = pawn.forwardBy()
-            when {
-                pawn.hasMoved -> return@let
-                listOf(forwardByOne, forwardByTwo).any { board.getSquare(it).isOccupied } -> return@let
-                else -> moves.add(BasicMove(pawn, forwardByTwo))
-            }
-        }
+        val captureMoves = setOf(pawn.forwardLeft(), pawn.forwardRight())
+            .filter { board.getSquareOrNull(it) isOccupiedBy pawn.theOtherPlayer }
+            .map { BasicMove(pawn, it, true) }
 
-        // capture moves
-        listOf(pawn.forwardLeft(), pawn.forwardRight()).forEach {
-            if (board.getSquareOrNull(it) occupiedBy pawn.player.theOtherPlayer) {
-                moves.add(BasicMove(pawn, it, true))
-            }
-        }
-
-        return moves.toSet()
+        return advanceMoves + captureMoves
     }
 
     /**
@@ -70,22 +61,25 @@ object MoveGenerator {
      * moves are possible
      */
     private fun enPassant(pawn: Pawn, board: Board): Set<Move> {
-        fun Pawn.backwardBy(n: Int = 1): Position = position - (Direction(rowDirection, 0) * n)
-        fun Pawn.advancedTwoSquares(): Boolean = history.first() == backwardBy(2)
+        fun Pawn.backwardBy(n: Int): Position = position - (Direction(rowDirection, 0) * n)
+        fun Pawn.advancedTwoSquaresLastTime(): Boolean = history.first() == backwardBy(2)
 
         return board.getPieces(pawn.theOtherPlayer, Pawn::class)
+            .asSequence()
+            .filter { it.advancedTwoSquaresLastTime() }
             .filter { enemyPawn ->
-                if (!enemyPawn.advancedTwoSquares()) return@filter false
-
+                // the enemy pawn must be on the same row, right next to the moving pawn
                 val (row, col) = pawn.position
                 val (enemyRow, enemyCol) = enemyPawn.position
-                if (row != enemyRow || abs(col - enemyCol) != 1) return@filter false
-
-                // TODO checking that it was the last move
-                val enemyPawnPrevPosition = enemyPawn.backwardBy(2)
-                board.previousBoard?.getSquare(enemyPawnPrevPosition)?.piece is Pawn
+                row == enemyRow && abs(col - enemyCol) == 1
+            }.filter { enemyPawn ->
+                // the two-step advance of the enemy pawn must be the last played move
+                when (val lastMove = board.playedMoves.last()) {
+                    is BasicMove -> lastMove.piece is Pawn && lastMove.to == enemyPawn.position
+                    else -> false
+                }
             }
-            .map { EnPassantMove(pawn, it.backwardBy(), it) }
+            .map { EnPassantMove(pawn, it.backwardBy(1), it) }
             .toSet()
     }
 
@@ -99,12 +93,11 @@ object MoveGenerator {
         // avoid infinite recursion when determining check
         if (!validateForCheck) return emptySet()
 
-        val rooks: List<Rook> = board.getPieces(king.player, Rook::class)
+        if (king.hasMoved || king.isInCheck(board)) return emptySet()
+
+        return board.getPieces(king.player, Rook::class)
+            .asSequence()
             .filterNot { it.hasMoved }
-
-        if (rooks.isEmpty() || king.hasMoved || king.isInCheck(board)) return emptySet()
-
-        return rooks
             .filter { rook ->
                 // there must be no pieces between the castling pieces
                 squaresBetween(rook.position, king.position, board).none { it.isOccupied }
@@ -131,9 +124,7 @@ object MoveGenerator {
     private fun squaresBetween(from: Position, to: Position, board: Board): List<Square> {
         require(from.row == to.row)
 
-        val fromCol = from.col
-        val toCol = to.col
-        return (1 + minOf(fromCol, toCol) until maxOf(fromCol, toCol))
+        return (1 + minOf(from.col, to.col) until maxOf(from.col, to.col))
             .map { board.getSquare(Position(to.row, it)) }
     }
 
@@ -152,8 +143,8 @@ object MoveGenerator {
             val newSquare = board.getSquareOrNull(newPos) ?: return moves
 
             return when {
-                newSquare occupiedBy piece.player -> moves
-                newSquare occupiedBy piece.theOtherPlayer -> moves.plus(BasicMove(piece, newPos, true))
+                newSquare isOccupiedBy piece.player -> moves
+                newSquare isOccupiedBy piece.theOtherPlayer -> moves.plus(BasicMove(piece, newPos, true))
                 else -> generateMovesRecursive(dir, n + 1, moves.plus(BasicMove(piece, newPos)))
             }
         }
