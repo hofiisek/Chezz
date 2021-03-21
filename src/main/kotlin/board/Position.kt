@@ -1,6 +1,5 @@
 package board
 
-
 /**
  * Specific position in the [row] and [col] of the chess board (indexed from 0 to 7).
  *

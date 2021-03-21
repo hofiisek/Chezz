@@ -128,7 +128,6 @@ object MoveGenerator {
             .map { board.getSquare(Position(to.row, it)) }
     }
 
-
     /**
      * Recursively generates moves for given [piece] until either:
      * - an own piece is hit, or
@@ -151,7 +150,6 @@ object MoveGenerator {
 
         return piece.movement.flatMap { generateMovesRecursive(it, 1) }.toSet()
     }
-
 }
 
 /**
