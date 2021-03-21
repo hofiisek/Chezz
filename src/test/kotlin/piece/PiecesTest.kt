@@ -20,7 +20,7 @@ class PiecesTest : StringSpec({
 
             val position = randomPosition()
 
-            (piece moveTo position).let {
+            (piece moveTo position).also {
                 it.position shouldBe position
                 it.player shouldBe piece.player
                 it.hasMoved shouldBe true
