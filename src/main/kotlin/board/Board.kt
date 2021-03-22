@@ -188,7 +188,7 @@ class Board {
 fun Board.whiteOnTurn(): Boolean = playerOnTurn == Player.WHITE
 
 /**
- * Simulates the given [move] and returns an updated board. Contrary to the [playMove] method,
+ * Simulates the given [move] and returns an updated board. Contrary to the [Board.playMove] method,
  * the players do not take turns - the move is only simulated to obtain the board state if
  * the move was played
  */

@@ -54,7 +54,7 @@ data class CastlingMove(
 data class EnPassantMove(val pawn: Piece, val to: Position, val capturedPawn: Piece) : Move()
 
 /**
- * Performs the move on the given [board] and returns the list of squares affected
+ * Performs the move on the given [board] and returns a list of squares affected by the move
  */
 fun Move.getAffectedSquares(): List<Square> = when (this) {
     is BasicMove -> {

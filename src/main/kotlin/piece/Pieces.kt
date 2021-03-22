@@ -26,7 +26,8 @@ sealed class Piece {
     abstract val position: Position
 
     /**
-     * Ordered list of positions that were occupied by the piece previously
+     * Ordered list of positions that were occupied by the piece previously,
+     * including the initial position
      */
     abstract val history: List<Position>
 
@@ -49,8 +50,7 @@ sealed class Piece {
     /**
      * The opposite player
      */
-    val theOtherPlayer: Player
-        get() = if (isWhite) Player.BLACK else Player.WHITE
+    val theOtherPlayer: Player get() = if (isWhite) Player.BLACK else Player.WHITE
 
     /**
      * Movement of the piece defined as a set of directions along x and y axis respectively.

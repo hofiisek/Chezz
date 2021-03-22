@@ -34,7 +34,7 @@ class BoardView : View() {
      * Matrix of [Rectangle]s that represent individual squares of the board
      */
     private val boardSquares: Matrix<Rectangle> = Matrix(8, 8) { _, _ ->
-        Rectangle(0.0, 0.0, 80.0, 80.0).apply { arcWidth = 3.0; arcHeight = 3.0 }
+        Rectangle(80.0, 80.0).apply { arcWidth = 3.0; arcHeight = 3.0 }
     }
 
     /**

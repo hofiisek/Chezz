@@ -15,7 +15,7 @@ object PgnExporter {
      * Processes the given [board] and returns its PGN "movetext" representation
      */
     fun exportToPgn(board: Board): String {
-        return exportRecursive(Board.initialBoard(), board.playedMoves.iterator(), "")
+        return exportRecursive(moves = board.playedMoves.iterator())
     }
 
     /**
@@ -25,7 +25,11 @@ object PgnExporter {
      * can move to the same destination, which would cause their standard algebraic
      * notations to be unambiguous.
      */
-    private tailrec fun exportRecursive(board: Board, moves: Iterator<Move>, movetext: String): String {
+    private tailrec fun exportRecursive(
+        board: Board = Board.initialBoard(),
+        moves: Iterator<Move>,
+        movetext: String = ""
+    ): String {
         if (!moves.hasNext()) return "$movetext${board.getGameResult().asString()}"
 
         val move = moves.next()

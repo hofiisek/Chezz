@@ -92,7 +92,7 @@ object PgnImporter {
      * Recursively reconstructs the board by performing the given [moves] one by one
      * on the given [board], starting with an initial board.
      */
-    private fun reconstruct(board: Board, moves: Iterator<String>): Board {
+    private tailrec fun reconstruct(board: Board, moves: Iterator<String>): Board {
         if (!moves.hasNext()) return board
 
         val moveAn: String = moves.next()

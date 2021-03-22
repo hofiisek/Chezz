@@ -36,13 +36,9 @@ class GameOverDialog : Fragment("Game over") {
      * Displays text with the result of the game in the given [pane]
      */
     private fun resultText(pane: Pane) {
-        // to allow smart-cast inside the when expression, we must copy the result to another
-        // variable.. otherwise it complains that smart-cast is impossible due to open/custom
-        // getter, most likely due to the "by param()" delegate
-        val result = gameResult
         pane.label(
             """
-            The game is over.. ${when (result) {
+            The game is over.. ${when (val result = gameResult) {
                 is GameResult.BlackWins -> {
                     "BLACK player wins ${if (result.type == WinType.CHECKMATE) "by checkmate" else "on time"}!"
                 }
