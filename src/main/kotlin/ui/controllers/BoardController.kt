@@ -56,17 +56,24 @@ class BoardController : Controller() {
     fun onSquareClicked(clickedPosition: Position) {
         val clickedSquare: Square = currentBoard.getSquare(clickedPosition)
 
-        println("Clicked on square $clickedSquare")
-
-        if (selectedPiece == null) {
-            if (clickedSquare.piece != null) selectPiece(clickedSquare.piece)
-        } else {
-            if (clickedSquare occupiedBySamePlayerAs selectedPiece!!) {
+        selectedPiece?.let {
+            if (clickedSquare occupiedBySamePlayerAs it) {
                 selectPiece(clickedSquare.piece!!)
             } else {
                 tryMoveTo(clickedSquare)
             }
-        }
+        } ?: clickedSquare.piece?.let { selectPiece(it) }
+
+        // which one is more kotlinish
+//        if (selectedPiece == null) {
+//            if (clickedSquare.piece != null) selectPiece(clickedSquare.piece)
+//        } else {
+//            if (clickedSquare occupiedBySamePlayerAs selectedPiece!!) {
+//                selectPiece(clickedSquare.piece!!)
+//            } else {
+//                tryMoveTo(clickedSquare)
+//            }
+//        }
     }
 
     /**
