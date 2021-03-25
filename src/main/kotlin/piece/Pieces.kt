@@ -66,7 +66,7 @@ sealed class Piece {
      * However, such moves are still considered check moves,
      * see https://www.fide.com/FIDE/handbook/LawsOfChess.pdf, paragraph 3.1.
      */
-    fun getAllowedMoves(board: Board, validateForCheck: Boolean = true): Set<Move> =
+    fun getAllowedMoves(board: Board, validateForCheck: Boolean = true): List<Move> =
         MoveGenerator.generate(this, board, validateForCheck)
 }
 
@@ -81,12 +81,12 @@ val Piece.icon: ImageView
  * A new instance of [Piece] is initialized on its new position with the move recorded in its history list.
  */
 infix fun Piece.moveTo(position: Position): Piece = when (this) {
-    is Pawn -> Pawn(player, position, history.plus(position))
-    is Rook -> Rook(player, position, history.plus(position))
-    is Knight -> Knight(player, position, history.plus(position))
-    is Bishop -> Bishop(player, position, history.plus(position))
-    is Queen -> Queen(player, position, history.plus(position))
-    is King -> King(player, position, history.plus(position))
+    is Pawn -> Pawn(player, position, history + position)
+    is Rook -> Rook(player, position, history + position)
+    is Knight -> Knight(player, position, history + position)
+    is Bishop -> Bishop(player, position, history + position)
+    is Queen -> Queen(player, position, history + position)
+    is King -> King(player, position, history + position)
 }
 
 data class Pawn(
