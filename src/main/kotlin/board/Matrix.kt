@@ -1,28 +1,20 @@
 package board
 
 /**
- * Creates a new matrix of [n] rows and [m] cols and initializes each element
- * using the [initializer].
- *
- * Delegates to the [List] interface but provides adjusted iterator
- * so it can by easily iterated element by element just as it was a 1D array.
- *
- * Due to the custom iterator, the index provided by the [forEachIndexed(int, action)][List.forEachIndexed]
- * method behaves as it was a 1D array (thus ranging from 1 to rows*cols exclusive).
- * To iterate through the matrix with both indices (row-wise and column-wise), use
- * [forEachIndexed(row, col, action)][forEachIndexed] instead.
+ * A matrix of [n] rows and [m] cols with each element initialized using the given [initializer].
  *
  * @param n number of rows
  * @param m number of cols
- * @param initializer lambda function providing current row and column to initialize matrix elements
+ * @param initializer lambda function providing row and column indices to initialize
+ * individual matrix elements
  *
  * @author Dominik Hoftych
  */
-data class Matrix<T>(
+class Matrix<T>(
     private val n: Int,
     private val m: Int,
     private val initializer: Matrix<T>.(row: Int, col: Int) -> T
-) : List<T> by ArrayList() {
+) : Iterable<T> {
 
     val matrix: List<List<T>> = List(n) { row ->
         List(m) { col ->
@@ -70,7 +62,7 @@ operator fun <T> Matrix<T>.get(position: Position): T = matrix[position.row][pos
 /**
  * Performs the given [action] on each row of the matrix
  */
-fun <T> Matrix<T>.forEachRow(action: Matrix<T>.(item: List<T>) -> Unit) {
+fun <T> Matrix<T>.forEachRow(action: (item: List<T>) -> Unit) {
     for (row in matrix) {
         action(row)
     }
@@ -79,7 +71,7 @@ fun <T> Matrix<T>.forEachRow(action: Matrix<T>.(item: List<T>) -> Unit) {
 /**
  * Performs the given [action] on each element, providing both row and column index with the element
  */
-fun <T> Matrix<T>.forEachIndexed(action: Matrix<T>.(row: Int, col: Int, item: T) -> Unit) {
+fun <T> Matrix<T>.forEachIndexed(action: (row: Int, col: Int, item: T) -> Unit) {
     for ((rowIdx, row) in matrix.withIndex()) {
         for ((colIdx, cell) in row.withIndex()) {
             action(rowIdx, colIdx, cell)
