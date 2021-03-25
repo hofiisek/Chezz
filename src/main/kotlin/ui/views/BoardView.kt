@@ -107,8 +107,11 @@ class BoardView : View() {
         if (checkedKing != null) {
             boardSquares[checkedKing.position].fill = Color.RED
         }
+
         boardSquares[piece.position].fill = Color.OLIVE
-        squares.forEach { boardSquares[it.position].fill = Color.FORESTGREEN }
+        squares.forEach {
+            boardSquares[it.position].fill = Color.FORESTGREEN
+        }
     }
 
     /**

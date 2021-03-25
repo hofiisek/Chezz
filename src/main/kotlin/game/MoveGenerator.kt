@@ -50,8 +50,9 @@ object MoveGenerator {
         }
 
         val captureMoves = setOf(pawn.forwardLeft(), pawn.forwardRight())
-            .filter { board.getSquareOrNull(it) isOccupiedBy pawn.theOtherPlayer }
-            .map { BasicMove(pawn, it, true) }
+            .mapNotNull { board.getSquareOrNull(it) }
+            .filter { it isOccupiedBy pawn.theOtherPlayer }
+            .map { BasicMove(pawn, it.position, true) }
 
         return advanceMoves + captureMoves
     }
