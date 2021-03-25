@@ -16,7 +16,7 @@ class Matrix<T>(
     private val initializer: Matrix<T>.(row: Int, col: Int) -> T
 ) : Iterable<T> {
 
-    val matrix: List<List<T>> = List(n) { row ->
+    val entries: List<List<T>> = List(n) { row ->
         List(m) { col ->
             initializer(row, col)
         }
@@ -29,7 +29,7 @@ class Matrix<T>(
 
         override fun next(): T {
             if (!this.hasNext()) throw NoSuchElementException()
-            return matrix[idx / n][idx++ % m]
+            return entries[idx / n][idx++ % m]
         }
     }
 
@@ -41,7 +41,7 @@ class Matrix<T>(
 
         if (n != other.n) return false
         if (m != other.m) return false
-        if (matrix != other.matrix) return false
+        if (entries != other.entries) return false
 
         return true
     }
@@ -49,7 +49,7 @@ class Matrix<T>(
     override fun hashCode(): Int {
         var result = n
         result = 31 * result + m
-        result = 31 * result + matrix.hashCode()
+        result = 31 * result + entries.hashCode()
         return result
     }
 }
@@ -57,13 +57,13 @@ class Matrix<T>(
 /**
  * Returns the particular [Square] on given [position] of the matrix
  */
-operator fun <T> Matrix<T>.get(position: Position): T = matrix[position.row][position.col]
+operator fun <T> Matrix<T>.get(position: Position): T = entries[position.row][position.col]
 
 /**
  * Performs the given [action] on each row of the matrix
  */
 fun <T> Matrix<T>.forEachRow(action: (item: List<T>) -> Unit) {
-    for (row in matrix) {
+    for (row in entries) {
         action(row)
     }
 }
@@ -72,7 +72,7 @@ fun <T> Matrix<T>.forEachRow(action: (item: List<T>) -> Unit) {
  * Performs the given [action] on each element, providing both row and column index with the element
  */
 fun <T> Matrix<T>.forEachIndexed(action: (row: Int, col: Int, item: T) -> Unit) {
-    for ((rowIdx, row) in matrix.withIndex()) {
+    for ((rowIdx, row) in entries.withIndex()) {
         for ((colIdx, cell) in row.withIndex()) {
             action(rowIdx, colIdx, cell)
         }
