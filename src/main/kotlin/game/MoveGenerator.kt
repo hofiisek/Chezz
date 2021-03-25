@@ -16,16 +16,14 @@ object MoveGenerator {
      * If [validateForCheck] is true, each move is validated to not put or leave its own king
      * in check.
      */
-    fun generate(piece: Piece, board: Board, validateForCheck: Boolean = true): Set<Move> = when (piece) {
+    fun generate(piece: Piece, board: Board, validateForCheck: Boolean = true): List<Move> = when (piece) {
         is Pawn -> pawnMoves(piece, board) + enPassant(piece, board)
         is King -> generateMoves(board, piece, 1) + castling(piece, board, validateForCheck)
         is Knight -> generateMoves(board, piece, 1)
         is Rook -> generateMoves(board, piece, 7)
         is Bishop -> generateMoves(board, piece, 7)
         is Queen -> generateMoves(board, piece, 7)
-    }.filter {
-        if (validateForCheck) board.simulateMove(it).isNotCheck() else true
-    }.toSet()
+    }.filter { !validateForCheck || board.simulateMove(it).isNotCheck() }
 
     /**
      * Generates the "basic" moves allowed for the given [pawn]. Such basic moves include classic advance moves
@@ -43,8 +41,7 @@ object MoveGenerator {
                 listOf(forwardByOne, forwardByTwo)
             } else {
                 listOf(forwardByOne)
-            }.map { BasicMove(pawn, it) }
-                .toSet()
+            }.map { BasicMove(pawn, it) }.toSet()
         } else {
             emptySet()
         }
@@ -76,7 +73,9 @@ object MoveGenerator {
             }.filter { enemyPawn ->
                 // the two-step advance of the enemy pawn must be the last played move
                 when (val lastMove = board.playedMoves.last()) {
-                    is BasicMove -> lastMove.piece is Pawn && lastMove.to == enemyPawn.position
+                    is BasicMove -> lastMove.piece is Pawn &&
+                        lastMove.piece.position == enemyPawn.history.first() &&
+                        lastMove.to == enemyPawn.position
                     else -> false
                 }
             }
@@ -101,16 +100,16 @@ object MoveGenerator {
             .filterNot { it.hasMoved }
             .filter { rook ->
                 // there must be no pieces between the castling pieces
-                squaresBetween(rook.position, king.position, board).none { it.isOccupied }
+                board.squaresBetween(rook.position, king.position).none { it.isOccupied }
             }
             .filter { rook ->
                 // squares crossed by the king must not be in check
                 val queenSide = abs(rook.position.col - king.position.col) == 4
                 val kingDestination = if (queenSide) king moveLeftBy 2 else king moveRightBy 2
-                squaresBetween(king.position, kingDestination, board).none { it.isInCheck(board) }
+                board.squaresBetween(king.position, kingDestination).none { it.isInCheck(board) }
             }
             .map { rook ->
-                val queenSide: Boolean = abs(rook.position.col - king.position.col) == 4
+                val queenSide = abs(rook.position.col - king.position.col) == 4
                 CastlingMove(
                     rook = if (queenSide) rook to (rook moveRightBy 3) else rook to (rook moveLeftBy 2),
                     king = if (queenSide) king to (king moveLeftBy 2) else king to (king moveRightBy 2),
@@ -122,11 +121,11 @@ object MoveGenerator {
     /**
      * Returns a list of squares that are between the given [from] and [to] positions
      */
-    private fun squaresBetween(from: Position, to: Position, board: Board): List<Square> {
+    private fun Board.squaresBetween(from: Position, to: Position): List<Square> {
         require(from.row == to.row)
 
         return (1 + minOf(from.col, to.col) until maxOf(from.col, to.col))
-            .map { board.getSquare(Position(to.row, it)) }
+            .map { getSquare(Position(to.row, it)) }
     }
 
     /**
@@ -145,8 +144,8 @@ object MoveGenerator {
             return when {
                 newSquare == null -> moves
                 newSquare isOccupiedBy piece.player -> moves
-                newSquare isOccupiedBy piece.theOtherPlayer -> moves.plus(BasicMove(piece, newPos, true))
-                else -> generateMovesRecursive(dir, n + 1, moves.plus(BasicMove(piece, newPos)))
+                newSquare isOccupiedBy piece.theOtherPlayer -> moves + BasicMove(piece, newPos, true)
+                else -> generateMovesRecursive(dir, n + 1, moves + BasicMove(piece, newPos))
             }
         }
 
