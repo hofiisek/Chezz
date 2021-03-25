@@ -57,23 +57,12 @@ class BoardController : Controller() {
         val clickedSquare: Square = currentBoard.getSquare(clickedPosition)
 
         selectedPiece?.let {
-            if (clickedSquare occupiedBySamePlayerAs it) {
-                selectPiece(clickedSquare.piece!!)
+            if (clickedSquare.piece?.player == it.player) {
+                selectPiece(clickedSquare.piece)
             } else {
                 tryMoveTo(clickedSquare)
             }
         } ?: clickedSquare.piece?.let { selectPiece(it) }
-
-        // which one is more kotlinish
-//        if (selectedPiece == null) {
-//            if (clickedSquare.piece != null) selectPiece(clickedSquare.piece)
-//        } else {
-//            if (clickedSquare occupiedBySamePlayerAs selectedPiece!!) {
-//                selectPiece(clickedSquare.piece!!)
-//            } else {
-//                tryMoveTo(clickedSquare)
-//            }
-//        }
     }
 
     /**
@@ -144,7 +133,8 @@ class BoardController : Controller() {
     }
 
     /**
-     * Mouse right-click listener registered on the whole board, used to reset (i.e. deselect) the currently selected piece
+     * Mouse right-click listener registered on the whole board,
+     * used to reset (i.e. deselect) the currently selected piece
      */
     fun resetSelection() {
         selectedPiece = null
@@ -174,9 +164,8 @@ class BoardController : Controller() {
      * Undoes the last move, or does nothing if the game hasn't started yet
      */
     fun undoLastMove() {
-        val prevBoard = currentBoard.previousBoard
-        if (hasGameStarted() && prevBoard != null) {
-            currentBoard = prevBoard
+        if (hasGameStarted()) currentBoard.previousBoard?.apply {
+            currentBoard = this
         }
     }
 
