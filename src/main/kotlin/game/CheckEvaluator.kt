@@ -10,13 +10,10 @@ import piece.Piece
  *
  * TODO what about promotion moves?
  */
-fun Position.isInCheck(board: Board): Boolean {
-    val enemyPieces: List<Piece> = board.getPieces(board.playerOnTurn.theOtherPlayer)
-    return enemyPieces
-        .flatMap { it.getAllowedMoves(board = board, validateForCheck = false) }
-        .filterIsInstance<BasicMove>()
-        .any { it.to == this }
-}
+fun Position.isInCheck(board: Board) = board.getPieces(board.playerOnTurn.theOtherPlayer)
+    .flatMap { it.getAllowedMoves(board = board, validateForCheck = false) }
+    .filterIsInstance<BasicMove>()
+    .any { it.to == this }
 
 /**
  * Returns true if the square is in check w.r.t given [board] state

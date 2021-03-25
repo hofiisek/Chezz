@@ -58,7 +58,7 @@ data class EnPassantMove(val pawn: Piece, val to: Position, val capturedPawn: Pi
  */
 fun Move.getAffectedSquares(): List<Square> = when (this) {
     is BasicMove -> {
-        val (piece, destination) = this
+        val (piece, destination, _) = this
         listOf(
             Square(piece.position, null),
             Square(destination, piece moveTo destination),
@@ -66,7 +66,7 @@ fun Move.getAffectedSquares(): List<Square> = when (this) {
     }
     is PromotionMove -> {
         val (basicMove, pawnPromotedTo) = this
-        val (pawn, destination) = basicMove
+        val (pawn, destination, _) = basicMove
         listOf(
             Square(pawn.position, null),
             Square(destination, pawnPromotedTo),
