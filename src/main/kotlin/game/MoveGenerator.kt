@@ -73,9 +73,10 @@ object MoveGenerator {
             }.filter { enemyPawn ->
                 // the two-step advance of the enemy pawn must be the last played move
                 when (val lastMove = board.playedMoves.last()) {
-                    is BasicMove -> lastMove.piece is Pawn &&
-                        lastMove.piece.position == enemyPawn.history.first() &&
-                        lastMove.to == enemyPawn.position
+                    is BasicMove ->
+                        lastMove.piece is Pawn &&
+                            lastMove.piece.position == enemyPawn.history.first() &&
+                            lastMove.to == enemyPawn.position
                     else -> false
                 }
             }
