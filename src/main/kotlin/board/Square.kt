@@ -28,11 +28,6 @@ data class Square(val position: Position, val piece: Piece? = null) {
 }
 
 /**
- * Returns true if the square is occupied by player of the same color as given [piece]
- */
-infix fun Square.occupiedBySamePlayerAs(piece: Piece): Boolean = this.piece?.player == piece.player
-
-/**
  * Returns true if the square is occupied by the given [player]
  */
-infix fun Square?.isOccupiedBy(player: Player): Boolean = this?.piece?.player == player
+infix fun Square.isOccupiedBy(player: Player): Boolean = this.piece?.player == player
