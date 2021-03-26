@@ -8,7 +8,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import piece.Piece
 import piece.moveTo
-import randomEmptyPositionOtherThan
+import randomUnoccupiedPositionOtherThan
 
 /**
  * @author Dominik Hoftych
@@ -28,7 +28,7 @@ class BoardTest : StringSpec({
             val piece = oldBoard.getPieces().random()
 
             // such a move might be invalid but that doesn't matter for this test
-            val destination = randomEmptyPositionOtherThan(oldBoard, piece.position)
+            val destination = oldBoard.randomUnoccupiedPositionOtherThan(piece.position)
             val move = BasicMove(piece, destination)
 
             val expectedPiece = piece moveTo destination
@@ -37,7 +37,7 @@ class BoardTest : StringSpec({
                 .filter { it.position != destination }
                 .map { it.position }
 
-            oldBoard.playMove(move).let { newBoard ->
+            oldBoard.playMove(move).also { newBoard ->
                 newBoard.previousBoard shouldBe oldBoard
                 newBoard.playerOnTurn shouldNotBe oldBoard.playerOnTurn
                 newBoard.playedMoves shouldContainExactly listOf(move)

@@ -7,40 +7,34 @@ import piece.*
  * @author Dominik Hoftych
  */
 
-fun randomPosition() = Position((0..7).random(), (0..7).random())
-
-fun randomPositionOtherThan(other: Position): Position {
-    while (true) {
-        val position = randomPosition()
-        if (position != other) return position
-    }
+fun randomPosition() = with(0..7) {
+    Position(this.random(), this.random())
 }
 
-fun randomEmptyPositionOtherThan(board: Board, other: Position): Position {
-    while (true) {
-        val position = randomPosition()
-        if (position != other && board.getSquare(position).isUnoccupied) return position
-    }
-}
+fun randomPositionOtherThan(other: Position): Position = randomPosition().takeIf {
+    it != other
+} ?: randomPositionOtherThan(other)
 
-fun randomPiece(player: Player = listOf(Player.WHITE, Player.BLACK).random()): Piece {
-    val position = randomPosition()
+fun Board.randomUnoccupiedPositionOtherThan(other: Position): Position = randomPosition().takeIf {
+    it != other && this.getSquare(it).isUnoccupied
+} ?: randomUnoccupiedPositionOtherThan(other)
 
-    return listOf(
-        Pawn(player, position),
-        Rook(player, position),
-        Knight(player, position),
-        Bishop(player, position),
-        Queen(player, position),
-        King(player, position)
+fun randomPiece(player: Player = Player.values().random()): Piece = with(randomPosition()) {
+    listOf(
+        Pawn(player, this),
+        Rook(player, this),
+        Knight(player, this),
+        Bishop(player, this),
+        Queen(player, this),
+        King(player, this)
     ).random()
 }
 
 fun String.asPosition(): Position {
-    require(this.matches("""[a-h][1-8]""".toRegex()))
+    require(matches("""[a-h][1-8]""".toRegex()))
 
     return Position(
-        8 - Character.getNumericValue(this.last()),
-        ('a'..'h').indexOf(this.first())
+        8 - Character.getNumericValue(last()),
+        ('a'..'h').indexOf(first())
     )
 }

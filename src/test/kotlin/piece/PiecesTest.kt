@@ -1,5 +1,6 @@
 package piece
 
+import board.Position
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainExactly
@@ -19,7 +20,6 @@ class PiecesTest : StringSpec({
             }
 
             val position = randomPosition()
-
             (piece moveTo position).also {
                 it.position shouldBe position
                 it.player shouldBe piece.player
@@ -29,14 +29,19 @@ class PiecesTest : StringSpec({
         }
     }
 
-    "piece's history is correctly tracked" {
-        val randomPositions = (0..20).map { randomPosition() }
-
-        // unfortunately need to mutate the piece here
-        var piece = randomPiece()
-        randomPositions.forEach { piece = piece moveTo it }
-
-        piece.position shouldBe randomPositions.last()
-        piece.history.drop(1) shouldContainExactly randomPositions
+    fun Piece.applyMoves(movesQueue: Iterator<Position>): Piece = when {
+        !movesQueue.hasNext() -> this
+        else -> movesQueue.next().let {
+            (this moveTo it).applyMoves(movesQueue)
+        }
     }
+
+    "piece's history is correctly tracked" {
+        val randomMoves = (0..20).map { randomPosition() }
+        val piece = randomPiece().applyMoves(randomMoves.iterator())
+
+        piece.position shouldBe randomMoves.last()
+        piece.history.drop(1) shouldContainExactly randomMoves
+    }
+
 })

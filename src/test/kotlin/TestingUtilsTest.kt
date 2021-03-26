@@ -13,21 +13,20 @@ import io.kotest.matchers.shouldNotBe
  */
 class TestingUtilsTest : StringSpec({
 
-    "either a valid position is created or an exception" +
-        " is thrown when creating position from string" {
-            val ranks = listOf(1, 2, 3, 4, 5, 6, 7, 8)
+    "when creating position from string, either a valid position is created or an exception is thrown " {
+            val ranks = (1..8).shuffled()
             val files = ('a'..'h')
 
-            ranks.shuffled().zip(files.shuffled()).forEach { (rank, file) ->
+            ranks.zip(files.shuffled()).forEach { (rank, file) ->
                 "$file$rank".asPosition().let {
-                    it shouldBe Position(8 - rank, files.indexOf(file))
                     it.rank shouldBe rank
                     it.file shouldBe file
+                    it shouldBe Position(8 - rank, files.indexOf(file))
                 }
             }
 
             val invalidFiles = ('i'..'z')
-            val invalidRanks = (8..20).plus((-10 until 0))
+            val invalidRanks = (8..20) + (-10..0)
             repeat(20) {
                 shouldThrowExactly<IllegalArgumentException> {
                     "${invalidFiles.random()}${invalidRanks.random()}".asPosition()
@@ -37,19 +36,21 @@ class TestingUtilsTest : StringSpec({
 
     "getting a random position returns a position other that the given" {
         repeat(20) {
-            randomPosition().let { position ->
-                randomPositionOtherThan(position) shouldNotBe position
+            randomPosition().also {
+                randomPositionOtherThan(it) shouldNotBe it
             }
         }
     }
 
-    "getting a random empty position returns an unoccupied position other than the given" {
-        val board = Board.initialBoard()
-        repeat(20) {
-            randomPosition().let { position ->
-                val generatedPosition = randomEmptyPositionOtherThan(board, position)
-                generatedPosition shouldNotBe position
-                board.getSquare(generatedPosition) shouldBe unoccupied()
+    "getting a random unoccupied position returns an unoccupied position other than the given" {
+        with(Board.initialBoard()) {
+            repeat(20) {
+                randomPosition().let { position ->
+                    randomUnoccupiedPositionOtherThan(position).let { randomPosition ->
+                        randomPosition shouldNotBe position
+                        getSquare(randomPosition) shouldBe unoccupied()
+                    }
+                }
             }
         }
     }
