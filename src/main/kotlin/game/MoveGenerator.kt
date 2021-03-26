@@ -112,8 +112,10 @@ object MoveGenerator {
             .map { rook ->
                 val queenSide = abs(rook.position.col - king.position.col) == 4
                 CastlingMove(
-                    rook = if (queenSide) rook to (rook moveRightBy 3) else rook to (rook moveLeftBy 2),
-                    king = if (queenSide) king to (king moveLeftBy 2) else king to (king moveRightBy 2),
+                    rook = rook,
+                    rookDestination = if (queenSide)rook moveRightBy 3 else rook moveLeftBy 2,
+                    king = king,
+                    kingDestination = if (queenSide) king moveLeftBy 2 else king moveRightBy 2,
                     queenSide = queenSide
                 )
             }.toSet()

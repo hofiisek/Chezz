@@ -42,8 +42,10 @@ data class PromotionMove(val basicMove: BasicMove, val promotedTo: Piece) : Move
  * When the king moves left, the castling is said to be [queenSide].
  */
 data class CastlingMove(
-    val rook: Pair<Piece, Position>,
-    val king: Pair<Piece, Position>,
+    val rook: Piece,
+    val rookDestination: Position,
+    val king: Piece,
+    val kingDestination: Position,
     val queenSide: Boolean
 ) : Move()
 
@@ -73,8 +75,7 @@ fun Move.getAffectedSquares(): List<Square> = when (this) {
         )
     }
     is CastlingMove -> {
-        val (rook, rookDestination) = this.rook
-        val (king, kingDestination) = this.king
+        val (rook, rookDestination, king, kingDestination, _) = this
         listOf(
             Square(rook.position, null),
             Square(king.position, null),
