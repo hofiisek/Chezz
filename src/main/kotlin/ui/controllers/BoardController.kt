@@ -53,16 +53,15 @@ class BoardController : Controller() {
      * The returned [ViewUpdate] contains all necessary data for the [BoardView]
      * to know what to render.
      */
-    fun onSquareClicked(clickedPosition: Position) {
-        val clickedSquare: Square = currentBoard.getSquare(clickedPosition)
-
-        selectedPiece?.let {
-            if (clickedSquare.piece?.player == it.player) {
-                selectPiece(clickedSquare.piece)
+    fun onSquareClicked(clickedPosition: Position) = currentBoard.getSquare(clickedPosition).let {
+        when (selectedPiece) {
+            is Piece -> if (it isOccupiedBy selectedPiece!!.player) {
+                selectPiece(it.piece!!)
             } else {
-                tryMoveTo(clickedSquare)
+                tryMoveTo(it)
             }
-        } ?: clickedSquare.piece?.let { selectPiece(it) }
+            else -> it.piece?.let { clickedPiece -> selectPiece(clickedPiece) }
+        }
     }
 
     /**
@@ -77,7 +76,7 @@ class BoardController : Controller() {
                 is BasicMove -> currentBoard.getSquare(it.to)
                 is PromotionMove -> currentBoard.getSquare(it.basicMove.to)
                 is EnPassantMove -> currentBoard.getSquare(it.to)
-                is CastlingMove -> currentBoard.getSquare(it.king.second)
+                is CastlingMove -> currentBoard.getSquare(it.kingDestination)
             }
         }
 
@@ -96,29 +95,26 @@ class BoardController : Controller() {
      * - captures the opponent's piece currently occupying the [clickedSquare]
      * - does nothing if a move to the [clickedSquare] is not possible
      */
-    private fun tryMoveTo(clickedSquare: Square) {
-        val move: Move = allowedMovesBySquare[clickedSquare] ?: return
-
+    private fun tryMoveTo(clickedSquare: Square) = allowedMovesBySquare[clickedSquare]?.let { move ->
         currentBoard = if (move is BasicMove && move.isPromotionMove) {
             currentBoard.playMove(PromotionMove(move, observePromotedPiece(move)))
         } else {
             currentBoard.playMove(move)
         }
-    }
+    } ?: Unit
 
     /**
-     * We need to observe the promotion to know the piece the player chose to
-     * promote its pawn to.
-     * To achieve this, we can use some TornadoFX hacks: if we open the [PromotionDialog]
-     * in a particular [Scope] and provide it with an [ItemViewModel] implementation,
-     * we are able to retrieve whatever gets changed and committed to the model, in that scope.
+     * We need to observe the promotion to know the particular piece to which the player
+     * chooses to promote its pawn to.
+     * To achieve this, we need to open the [PromotionDialog] in a [Scope] and provide it
+     * with an [ItemViewModel]. Then we are able to retrieve whatever gets changed
+     * and committed to that model in that scope.
      */
     private fun observePromotedPiece(move: BasicMove): Piece {
         val (pawn, destination) = move
 
         val model = PromotionPieceModel()
-        val scope = Scope(model)
-        boardView.openPromotionWindow(scope, pawn moveTo destination)
+        boardView.openPromotionWindow(Scope(model), pawn moveTo destination)
 
         return model.pieceType.value
     }
