@@ -1,12 +1,25 @@
 # Chezz
-Implementation of a full-featured chess game, written purely in Kotlin, with a simple GUI using the TornadoFX framework.
+Full-featured chess written in Kotlin.
+
+Using TornadoFx (https://tornadofx.io/) for GUI, kotest (https://github.com/kotest/kotest)
+for unit testing, ktlint (https://github.com/pinterest/ktlint) for code style,
+and detekt (https://github.com/detekt/detekt) for code analysis.
+
+### Why?
+- mainly to get familiar with Kotlin and to see it's power
+- also, lockdown boredom has been taking too long already
+- Queen's Gambit? coincidence?? :)
 
 ### Features
-- valid movement of pieces, including advanced moves such as two-step advance, castling, and en passant
-- check, checkmate, stalemate
+- valid movement of pieces
+- check, checkmate, stalemate, promotion
 - undo last move
+- import/export from/to the standard Portable Game Notation (PGN) format
   
-### Yet-to-be-implemented features
-- exporting (saving) games to the standardized Portable Game Notation (PGN) format
-- importing (loading) games in the PGN format
-- minimax and/or alpha-beta prunning AI
+### Yet to be implemented
+- minimax/alpha-beta prunning AI
+- timer
+- GUI improvements
+    - showing taken pieces
+    - showing PGN of current game state
+    - enable/disable showing of allowed moves and check
