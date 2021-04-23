@@ -7,8 +7,6 @@ import piece.Piece
 
 /**
  * Returns true if the position is in check w.r.t given [board] state
- *
- * TODO what about promotion moves?
  */
 fun Position.isInCheck(board: Board) = board.getPieces(board.playerOnTurn.theOtherPlayer)
     .flatMap { it.getAllowedMoves(board = board, validateForCheck = false) }
