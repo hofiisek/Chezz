@@ -26,7 +26,7 @@ object MoveGenerator {
     }.filter { !validateForCheck || board.simulateMove(it).isNotCheck() }
 
     /**
-     * Generates the "basic" moves allowed for the given [pawn]. Such basic moves include classic advance moves
+     * Generates the "basic" moves for the given [pawn]. Such moves include standard advance moves
      * by 1 square forward, two square advance moves, and capture moves.
      */
     private fun pawnMoves(pawn: Pawn, board: Board): Set<Move> {
@@ -36,7 +36,7 @@ object MoveGenerator {
 
         val forwardByOne = pawn.forwardBy(1)
         val forwardByTwo = pawn.forwardBy(2)
-        val advanceMoves = if (board.getSquare(forwardByOne).isUnoccupied) {
+        val advanceMoves = if (board.getSquareOrNull(forwardByOne)?.isUnoccupied == true) {
             if (!pawn.hasMoved && board.getSquare(forwardByTwo).isUnoccupied) {
                 listOf(forwardByOne, forwardByTwo)
             } else {

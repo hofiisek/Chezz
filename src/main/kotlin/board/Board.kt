@@ -78,38 +78,34 @@ class Board {
     )
 
     /**
-     * Returns the [Square] on given [position], or throw exception if given position is not on the board
+     * Returns the [Square] on given [position], or throws exception if given position is not on the board
      */
-    fun getSquare(position: Position): Square {
-        return if (position.isOnBoard) squares[position] else throw IllegalArgumentException("Position not on board")
+    fun getSquare(position: Position): Square = if (position.isOnBoard) {
+        squares[position]
+    } else {
+        throw IllegalArgumentException("Position $position not on board")
     }
 
     /**
      * Returns the [Square] on given [position], or null if the given position is not on the board
      */
-    fun getSquareOrNull(position: Position): Square? {
-        return if (position.isOnBoard) squares[position] else null
-    }
+    fun getSquareOrNull(position: Position): Square? = if (position.isOnBoard) squares[position] else null
 
     /**
      * Returns all pieces of given [player] and [type]
      */
-    fun <T : Piece> getPieces(player: Player = playerOnTurn, type: KClass<T>): List<T> {
-        return squares
-            .mapNotNull { it.piece }
-            .filter { it.player == player }
-            .filterIsInstance(type.java)
-            .map { type.cast(it) }
-    }
+    fun <T : Piece> getPieces(player: Player = playerOnTurn, type: KClass<T>): List<T> = squares
+        .mapNotNull { it.piece }
+        .filter { it.player == player }
+        .filterIsInstance(type.java)
+        .map { type.cast(it) }
 
     /**
      * Returns all pieces of given [player]
      */
-    fun getPieces(player: Player = playerOnTurn): List<Piece> {
-        return squares
-            .mapNotNull { it.piece }
-            .filter { it.player == player }
-    }
+    fun getPieces(player: Player = playerOnTurn): List<Piece> = squares
+        .mapNotNull { it.piece }
+        .filter { it.player == player }
 
     /**
      * Returns the king of the player on turn
