@@ -5,13 +5,14 @@ Using TornadoFx (https://tornadofx.io/) for GUI, kotest (https://github.com/kote
 for unit testing, ktlint (https://github.com/pinterest/ktlint) for code style,
 and detekt (https://github.com/detekt/detekt) for code analysis.
 
+![Video preview](https://github.com/hofiisek/Chezz/blob/master/run_chezz.gif)
+
 ### Why?
 - mainly to get familiar with Kotlin and to see its power
 - also, lockdown boredom has been going on for too long already
 
 ### How to run it?
 - the simplest way is to open the project in IntelliJ IDEA and run `ChezzApp.kt`
-- ![Video preview](https://github.com/hofiisek/Chezz/blob/master/run_chezz.gif)
 
 ### Features
 - valid movement of pieces (incl. en passant, castling, and promotion)
