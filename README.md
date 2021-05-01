@@ -11,6 +11,7 @@ and detekt (https://github.com/detekt/detekt) for code analysis.
 
 ### How to run it?
 - the simplest way is to open the project in IntelliJ IDEA and run `ChezzApp.kt`
+- ![Video preview](https://github.com/hofiisek/Chezz/blob/master/run_chezz.gif)
 
 ### Features
 - valid movement of pieces (incl. en passant, castling, and promotion)
