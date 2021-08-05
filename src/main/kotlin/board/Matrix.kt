@@ -29,7 +29,7 @@ class Matrix<T>(
 
         override fun next(): T {
             if (!this.hasNext()) throw NoSuchElementException()
-            return entries[idx / n][idx++ % m]
+            return entries[idx / m][idx++ % m]
         }
     }
 
